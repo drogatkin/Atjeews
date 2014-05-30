@@ -7,7 +7,7 @@
     <string name="http_prfx">http://</string>
     <string name="deploy">Deploy</string>
     <string name="list_deployed">Deployed web apps</string>
-    <string name="app_version">1.1</string>
+    <string name="app_version">1.1a</string>
     <string name="menu_app_redeploy">Redeploy</string>
     <string name="menu_app_remove">Remove</string>
     <string name="menu_app_stop">Stop</string>

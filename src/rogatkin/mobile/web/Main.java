@@ -3,6 +3,7 @@
  */
 package rogatkin.mobile.web;
 
+import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -188,7 +189,11 @@ public class Main extends Activity {
 
 	@Override
 	protected void onStop() {
-		storeConfig();
+		try {
+			storeConfig();
+		} catch (Exception e) {
+			reportProblem(e);
+		}
 		super.onStop();
 	}
 
@@ -239,8 +244,17 @@ public class Main extends Activity {
 		config.logEnabled = ((CheckBox) findViewById(R.id.checkBox2)).isChecked();
 		try {
 			int port = Integer.parseInt(((EditText) findViewById(R.id.editPort)).getText().toString());
-			if (port < 1024 || port > 65536)
-				throw new IllegalArgumentException("Port value " + port + " is out of allowed range ");
+			if (port > 65536)
+				throw new IllegalArgumentException("Port value " + port + " is out of allowed range");
+			else if(port < 1024) {
+				try {
+					ServerSocket ss = new ServerSocket(port);
+					ss.close();
+				} catch (Exception e) {
+					throw new IllegalArgumentException("Port value " + port
+							+ " is out of allowed range", e);
+				}
+			}
 			config.port = port;
 		} catch (Exception e) {
 			throw new IllegalArgumentException("" + e, e);

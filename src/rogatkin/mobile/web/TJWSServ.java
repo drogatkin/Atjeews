@@ -22,6 +22,8 @@ import java.util.Properties;
 
 import javax.servlet.Servlet;
 
+import org.apache.http.conn.util.InetAddressUtils;
+
 import rogatkin.web.WarRoller;
 import rogatkin.web.WebApp;
 import rogatkin.web.WebAppServlet;
@@ -222,9 +224,13 @@ public class TJWSServ extends Service {
 	}
 
 	protected void initDeployDirectory() {
+		if (Main.DEBUG)
+			Log.d(SERVICE_NAME, "deploy dir:"+deployDir+", for app:"+getFilesDir());
 		if (deployDir != null && deployDir.exists())
 			return;
-
+		if (Main.DEBUG)
+			Log.d(SERVICE_NAME, "use sd:"+config.useSD+", deployed to:"+deployDir);
+		config.useSD = 	android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.GINGERBREAD_MR1;
 		if (config.useSD) {
 			deployDir = new File(Environment.getExternalStorageDirectory(), DEPLOYMENTDIR);
 			if (deployDir.exists() || deployDir.mkdirs())
@@ -234,12 +240,16 @@ public class TJWSServ extends Service {
 		}
 		if (config.useSD == false) {
 			deployDir = new File(System.getProperty(Config.APP_HOME), DEPLOYMENTDIR);
-			if (deployDir.exists() == false && deployDir.mkdir() == false) {
+			deployDir = new File(getFilesDir(), DEPLOYMENTDIR);
+			if (deployDir.exists() == false && deployDir.mkdirs() == false) {
 				if (Main.DEBUG)
-					Log.e(SERVICE_NAME, "Can't establish web apps deployment directory");
+					Log.e(SERVICE_NAME, "Can't establish web apps deployment directory:"+deployDir);
 				deployDir = new File("/sdcard", DEPLOYMENTDIR);
 			}
+			System.setProperty(WebApp.DEF_WEBAPP_AUTODEPLOY_DIR, deployDir.getPath());
 		}
+		if (Main.DEBUG)
+			Log.d(SERVICE_NAME, "deploy dir "+deployDir+" is "+deployDir.exists());
 	}
 
 	protected void updateWWWServlet() {
@@ -293,7 +303,8 @@ public class TJWSServ extends Service {
 				Log.e(SERVICE_NAME, "Can't resolve :" + config.bindAddr + " " + e.toString());
 			return null;
 		}
-		return getLookbackAddress(); //getNonLookupAddress();
+		return getLookbackAddress();
+		//return getNonLookupAddress();
 	}
 	
 	public static InetAddress getLookbackAddress() {
@@ -304,9 +315,11 @@ public class TJWSServ extends Service {
 				for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
 					InetAddress inetAddress = enumIpAddr.nextElement();
 					if (inetAddress.isLoopbackAddress()) {
-						if (inetAddress.isSiteLocalAddress() == false)
+						if (inetAddress.isSiteLocalAddress() == false && InetAddressUtils.isIPv4Address(inetAddress.getHostAddress()))
 							return inetAddress;
 						result = inetAddress;
+						//if (Main.DEBUG)
+							//Log.e(SERVICE_NAME, "processed addr:"+result);
 					}
 				}
 			}
@@ -325,7 +338,7 @@ public class TJWSServ extends Service {
 				for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
 					InetAddress inetAddress = enumIpAddr.nextElement();
 					if (!inetAddress.isLoopbackAddress()) {
-						if (inetAddress.isSiteLocalAddress() == false)
+						if (inetAddress.isSiteLocalAddress() == false && InetAddressUtils.isIPv4Address(inetAddress.getHostAddress()))
 							return inetAddress;
 						result = inetAddress;
 					}
@@ -352,13 +365,22 @@ public class TJWSServ extends Service {
 		} else
 			srv.arguments.remove(Acme.Serve.Serve.ARG_ACCEPTOR_CLASS);
 		srv.setAccessLogged(config.logEnabled);
+		
 		// bind address
+		if (Main.DEBUG)
+			Log.d(SERVICE_NAME, "bind to "+config.bindAddr+",use sd:"+config.useSD+", deployed to:"+deployDir);
+		/*if (config.bindAddr == null) {
+			srv.arguments.put(Acme.Serve.Serve.ARG_BINDADDRESS, "127:0:0:1");
+			return "localhost";
+		}*/
 		InetAddress iadr = getLocalIpAddress();
 		if (iadr != null) {
 			String canonicalAddr = iadr.getCanonicalHostName();
 			if (canonicalAddr != null && "null".equals(canonicalAddr) == false) { // Android bug
 				if (iadr.isAnyLocalAddress() == false) {
 					srv.arguments.put(Acme.Serve.Serve.ARG_BINDADDRESS, iadr.getHostAddress());
+					if (Main.DEBUG)
+						Log.e(SERVICE_NAME, "bound:"+canonicalAddr);
 					return canonicalAddr;
 				} else {
 					srv.arguments.remove(Acme.Serve.Serve.ARG_BINDADDRESS);
@@ -369,6 +391,8 @@ public class TJWSServ extends Service {
 			}
 		}
 		srv.arguments.remove(Acme.Serve.Serve.ARG_BINDADDRESS);
+		if (Main.DEBUG)
+			Log.e(SERVICE_NAME, "No address bound");
 		try {
 			return InetAddress.getLocalHost().getHostAddress();
 		} catch (UnknownHostException e) {

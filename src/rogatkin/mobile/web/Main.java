@@ -43,7 +43,7 @@ import android.widget.TextView;
 public class Main extends Activity {
 	public static final String APP_NAME = "Atjeews";
 
-	public static final int APP_VER_MN = 3;
+	public static final int APP_VER_MN = 4;
 
 	public static final int APP_VER_MJ = 1;
 	

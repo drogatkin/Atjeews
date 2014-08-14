@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE bee PUBLIC "-//Dmitriy Rogatkin//DTD Bee Project Builder 1.0//EN"
     "http://knitknot.info/DTD/bee.dtd" [
-      <!ENTITY android_sdk "E:\tools\adt-bundle-windows-x86_64-20140321\sdk">
+      <!ENTITY android_sdk "E:\tools\adt-bundle-windows-x86_64-20140702\sdk">
       <!ENTITY jasper_lib "E:\projects\jasper7\build\jasper.jar">
       <!ENTITY servlet_lib "E:\projects\servlet\javax.servlet.jar">
-      <!ENTITY target "4.4.2">
+      <!ENTITY target "4.4W">
 ]>
 <!-- $Id: bee-dexwar.xml,v 1.13 2012/09/15 17:48:30 dmitriy Exp $ Prepare 
 	war file for Android deployment Copyright (c) Dmitriy Rogatkin -->
@@ -293,15 +293,7 @@
                         <parameter variable="jsp jar"/>
                         <parameter variable="jsp dir" type="file"/>
                     </function>
-                    <expression name="jsp dir">
-                        <operator name="append">
-                            <value variable="jsp dir"/>
-                            <value>/*/*/*/*/*/*/*/*/*/*/*</value>
-                        </operator>
-                    </expression>
-                    <function name="rm">
-                          <parameter variable="jsp dir"/>
-                    </function>
+                    <!-- keep JSP .class files here to make JSP engine think they are actual -->                    
                 </then>
                 <else>
                     <echo>No JSP</echo>

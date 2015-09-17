@@ -312,7 +312,7 @@ public class Main extends Activity {
 				Intent browserIntent ;
 				if ("/settings".equals(appName))
 					browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http" + (config.ssl ? "s" : "")
-							+"://localhost:"+config.port+"/settings"));
+							+"://" + (ipv6?"[":"") + hostName+ (ipv6?"]":"") + ":" +config.port+"/settings"));
 				else
 				     browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http" + (config.ssl ? "s" : "")
 						+ "://" + (ipv6?"[":"") + hostName+ (ipv6?"]":"") + ":" + config.port

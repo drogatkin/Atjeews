@@ -47,7 +47,7 @@ public class Main extends Activity {
 	public static final int APP_VER_MN = 5;
 
 	public static final int APP_VER_MJ = 1;
-	
+
 	public static final boolean DEBUG = true;;
 
 	protected Config config;
@@ -75,7 +75,6 @@ public class Main extends Activity {
 		Button button = (Button) findViewById(R.id.button1);
 		button.setOnClickListener(new OnClickListener() {
 
-			
 			public void onClick(View v) {
 				EditText surl = (EditText) findViewById(R.id.editText1);
 				String userInput = surl.getText().toString();
@@ -92,11 +91,14 @@ public class Main extends Activity {
 					@Override
 					protected void onPostExecute(Void result) {
 						dialog.dismiss();
-						RCServ servCtrl = ((TJWSApp)getApplication()).getServiceControl();
+						RCServ servCtrl = ((TJWSApp) getApplication())
+								.getServiceControl();
 						if (lastError != null) {
-							AlertDialog.Builder builder = new AlertDialog.Builder(Main.this);
-							builder.setMessage(String
-									.format(getResources().getString(R.string.alrt_problem), lastError));
+							AlertDialog.Builder builder = new AlertDialog.Builder(
+									Main.this);
+							builder.setMessage(String.format(getResources()
+									.getString(R.string.alrt_problem),
+									lastError));
 							builder.setIcon(R.drawable.stop);
 							builder.setTitle(R.string.t_error);
 							builder.create().show();
@@ -114,13 +116,15 @@ public class Main extends Activity {
 
 					@Override
 					protected void onPreExecute() {
-						dialog = ProgressDialog.show(Main.this, "Deploying", "Please wait for few seconds..", true);
+						dialog = ProgressDialog.show(Main.this, "Deploying",
+								"Please wait for few seconds..", true);
 						super.onPreExecute();
 					}
 
 					@Override
 					protected Void doInBackground(String... urls) {
-						RCServ servCtrl = ((TJWSApp)getApplication()).getServiceControl();
+						RCServ servCtrl = ((TJWSApp) getApplication())
+								.getServiceControl();
 						try {
 							lastError = servCtrl.deployApp(urls[0]);
 						} catch (NullPointerException npe) {
@@ -137,9 +141,9 @@ public class Main extends Activity {
 		button = (Button) findViewById(R.id.button2);
 		button.setOnClickListener(new OnClickListener() {
 
-			
 			public void onClick(View view) {
-				RCServ servCtrl = ((TJWSApp)getApplication()).getServiceControl();
+				RCServ servCtrl = ((TJWSApp) getApplication())
+						.getServiceControl();
 				try {
 					fillServlets(servCtrl.rescanApps());
 				} catch (Exception e) {
@@ -148,14 +152,14 @@ public class Main extends Activity {
 			}
 		});
 
-		listView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, servletsList));
+		listView.setAdapter(new ArrayAdapter<String>(this,
+				android.R.layout.simple_list_item_1, servletsList));
 		registerForContextMenu(listView);
 
 		CheckBox checkbox = (CheckBox) findViewById(R.id.checkStrt);
 		checkbox.requestFocus();
 		checkbox.setOnClickListener(new OnClickListener() {
 
-			
 			public void onClick(View view) {
 				if (((CheckBox) view).isChecked())
 					start();
@@ -164,17 +168,19 @@ public class Main extends Activity {
 			}
 		});
 
-		((CheckBox) findViewById(R.id.checkBox2)).setOnClickListener(new OnClickListener() {
+		((CheckBox) findViewById(R.id.checkBox2))
+				.setOnClickListener(new OnClickListener() {
 
-			public void onClick(View view) {
-				RCServ servCtrl = ((TJWSApp)getApplication()).getServiceControl();
-				try {
-					servCtrl.logging(((CheckBox) view).isChecked());
-				} catch (Exception e) {
-					reportProblem(e);
-				}
-			}
-		});
+					public void onClick(View view) {
+						RCServ servCtrl = ((TJWSApp) getApplication())
+								.getServiceControl();
+						try {
+							servCtrl.logging(((CheckBox) view).isChecked());
+						} catch (Exception e) {
+							reportProblem(e);
+						}
+					}
+				});
 		updateUI();
 	}
 
@@ -203,7 +209,7 @@ public class Main extends Activity {
 		super.onResume();
 		updateUI();
 	}
-	
+
 	private void updateUI() {
 		RCServ servCtrl = ((TJWSApp) getApplication()).getServiceControl();
 
@@ -223,7 +229,7 @@ public class Main extends Activity {
 	}
 
 	private void updateStatus() {
-		RCServ servCtrl = ((TJWSApp)getApplication()).getServiceControl();
+		RCServ servCtrl = ((TJWSApp) getApplication()).getServiceControl();
 		try {
 			CheckBox startBtn = (CheckBox) findViewById(R.id.checkStrt);
 			boolean stopped = servCtrl.getStatus() != TJWSServ.ST_RUN;
@@ -242,12 +248,16 @@ public class Main extends Activity {
 
 	void storeConfig() {
 		config.load(this);
-		config.logEnabled = ((CheckBox) findViewById(R.id.checkBox2)).isChecked();
+		config.logEnabled = ((CheckBox) findViewById(R.id.checkBox2))
+				.isChecked();
 		try {
-			int port = Integer.parseInt(((EditText) findViewById(R.id.editPort)).getText().toString());
+			int port = Integer
+					.parseInt(((EditText) findViewById(R.id.editPort))
+							.getText().toString());
 			if (port > 65536)
-				throw new IllegalArgumentException("Port value " + port + " is out of allowed range");
-			else if(port < 1024) {
+				throw new IllegalArgumentException("Port value " + port
+						+ " is out of allowed range");
+			else if (port < 1024) {
 				try {
 					ServerSocket ss = new ServerSocket(port);
 					ss.close();
@@ -265,7 +275,8 @@ public class Main extends Activity {
 	}
 
 	@Override
-	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+	public void onCreateContextMenu(ContextMenu menu, View v,
+			ContextMenuInfo menuInfo) {
 		super.onCreateContextMenu(menu, v, menuInfo);
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
 		if (info.position <= 0)
@@ -280,10 +291,11 @@ public class Main extends Activity {
 
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
-		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item
+				.getMenuInfo();
 		ListView listView = (ListView) findViewById(R.id.listView1);
 		String appName = (String) listView.getAdapter().getItem(info.position);
-		RCServ servCtrl = ((TJWSApp)getApplication()).getServiceControl();
+		RCServ servCtrl = ((TJWSApp) getApplication()).getServiceControl();
 		if (appName == null || servCtrl == null)
 			return super.onContextItemSelected(item);
 		try {
@@ -310,14 +322,26 @@ public class Main extends Activity {
 					return true;
 				}
 				boolean ipv6 = !(hostName.indexOf(':') < 0);
-				Intent browserIntent ;
+				Intent browserIntent;
 				if ("/settings".equals(appName))
-					browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http" + (config.ssl ? "s" : "")
-							+"://" + (ipv6?"[":"") + hostName+ (ipv6?"]":"") + ":" +config.port+"/settings"));
+					browserIntent = new Intent(Intent.ACTION_VIEW,
+							Uri.parse("http" + (config.ssl ? "s" : "") + "://"
+									+ (ipv6 ? "[" : "") + hostName
+									+ (ipv6 ? "]" : "") + ":" + config.port
+									+ "/settings"));
 				else
-				     browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http" + (config.ssl ? "s" : "")
-						+ "://" + (ipv6?"[":"") + hostName+ (ipv6?"]":"") + ":" + config.port
-						+ (appName.endsWith("/*") ? appName.substring(0, appName.length() - 2) : appName)));
+					browserIntent = new Intent(Intent.ACTION_VIEW,
+							Uri.parse("http"
+									+ (config.ssl ? "s" : "")
+									+ "://"
+									+ (ipv6 ? "[" : "")
+									+ hostName
+									+ (ipv6 ? "]" : "")
+									+ ":"
+									+ config.port
+									+ (appName.endsWith("/*") ? appName
+											.substring(0, appName.length() - 2)
+											: appName)));
 				startActivity(browserIntent);
 				return true;
 			case R.id.app_remove:
@@ -359,7 +383,8 @@ public class Main extends Activity {
 			servletsList.add(servName);
 		if (notify) {
 			ListView listView = (ListView) findViewById(R.id.listView1);
-			((BaseAdapter) ((HeaderViewListAdapter) listView.getAdapter()).getWrappedAdapter()).notifyDataSetChanged();
+			((BaseAdapter) ((HeaderViewListAdapter) listView.getAdapter())
+					.getWrappedAdapter()).notifyDataSetChanged();
 		}
 	}
 
@@ -376,19 +401,30 @@ public class Main extends Activity {
 		}
 	}
 
-	private void start() {		
-		RCServ servCtrl = ((TJWSApp)getApplication()).getServiceControl();
-		try {
-			storeConfig();
-			hostName = servCtrl.start();
-		} catch (Exception e) {
-			reportProblem(e);
-		}
-		updateTitle();
+	private void start() {
+		storeConfig();
+		new AsyncTask<RCServ, Void, String>() {
+
+			@Override
+			protected void onPostExecute(String host) {
+				hostName = host;
+				updateTitle();
+			}
+
+			@Override
+			protected String doInBackground(RCServ... sc) {
+				try {
+					return sc[0].start();
+				} catch (Exception e) {
+					reportProblem(e);
+				}
+				return null;
+			}
+		}.execute(((TJWSApp) getApplication()).getServiceControl());
 	}
 
 	private void stop() {
-		RCServ servCtrl = ((TJWSApp)getApplication()).getServiceControl();
+		RCServ servCtrl = ((TJWSApp) getApplication()).getServiceControl();
 		if (servCtrl != null) {
 			try {
 				servCtrl.stop();
@@ -404,7 +440,7 @@ public class Main extends Activity {
 		if (problem instanceof NullPointerException == false)
 			if (DEBUG)
 				Log.e(APP_NAME, "Unexpected problem:" + problem, problem);
-		Toast.makeText(this, ""+problem,  Toast.LENGTH_LONG).show();
+		Toast.makeText(this, "" + problem, Toast.LENGTH_LONG).show();
 	}
 
 }

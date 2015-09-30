@@ -65,11 +65,10 @@ public class TJWSServ extends Service {
 	protected ArrayList<String> servletsList;
 	protected PrintStream logStream;
 	public File deployDir;
-	String host;
 
 	private int status;
 	
-	public boolean protectedFS = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT;
+	public boolean protectedFS = android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.GINGERBREAD_MR1;
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -84,9 +83,9 @@ public class TJWSServ extends Service {
 
 		
 		public String start() throws RemoteException {
-			//String result = updateNetworkSettings();
+			String result = updateNetworkSettings();
 			startServ();
-			return host;
+			return result;
 		}
 
 		
@@ -161,10 +160,6 @@ public class TJWSServ extends Service {
 			new Thread() {
 				@Override
 				public void run() {
-					host = updateNetworkSettings();
-					synchronized(this) {
-						notify();
-					}
 					status = ST_RUN;
 					int code = 0;
 					try {
@@ -177,9 +172,6 @@ public class TJWSServ extends Service {
 					}
 				}
 			}.start();
-			synchronized(this) {
-				wait();
-			}
 		}
 	}
 

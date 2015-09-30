@@ -36,11 +36,13 @@ public class Settings extends HttpServlet {
 
 	@Override
 	public String getServletInfo() {
-		return Serve.Identification.serverName + " " + Serve.Identification.serverVersion;
+		return Serve.Identification.serverName + " "
+				+ Serve.Identification.serverVersion;
 	}
 
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
 		resp.setHeader("Cache-Control", "no-cache");
 		resp.setDateHeader("Expires", 0);
 		PrintWriter pw = resp.getWriter();
@@ -65,7 +67,7 @@ public class Settings extends HttpServlet {
 		pw.print("</select></td></tr>");
 		pw.print("<tr><td>Serviced folder</td><td><input type=\"text\" name=\"webroot\" value=\"");
 		if (atjeews.config.wwwFolder != null)
-			pw.print( Utils.htmlEncode(atjeews.config.wwwFolder, false));
+			pw.print(Utils.htmlEncode(atjeews.config.wwwFolder, false));
 		pw.print("\"></td></tr><tr><td>Virt host</td><td><input type=\"checkbox\" name=\"virt_host\" value=\"true\"></td></tr>");
 		String password = atjeews.config.password != null ? SET_PASSWORD : "";
 
@@ -79,9 +81,11 @@ public class Settings extends HttpServlet {
 			pw.print(atjeews.config.bindAddr);
 		pw.print("\"></td></tr>");
 		pw.print("<tr><td><select onChange=\"updateBindAddr(this)\"><option>Custom</option>");
-		for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+		for (Enumeration<NetworkInterface> en = NetworkInterface
+				.getNetworkInterfaces(); en.hasMoreElements();) {
 			NetworkInterface intf = en.nextElement();
-			for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+			for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr
+					.hasMoreElements();) {
 				InetAddress inetAddress = enumIpAddr.nextElement();
 				pw.print("<option value=\"");
 				pw.print(inetAddress.getHostAddress());
@@ -99,20 +103,23 @@ public class Settings extends HttpServlet {
 		pw.print("\"></td></tr>");
 		pw.print("<tr><td><input type=\"submit\" value=\"Save\" colspan=\"2\"></td></tr>");
 		pw.print("</table></form>");
-		pw.print("<div>Upload web application (.war)</div><form name=\"upload_form\" method=\"POST\" action=\"settings\" enctype=\"multipart/form-data\">");
+		pw.print("<div>Upload web application (.war) or keystore</div><form name=\"upload_form\" method=\"POST\" action=\"settings\" enctype=\"multipart/form-data\">");
 		pw.print("<input type=\"file\" name=\"app_file\" onchange=\"document.forms.upload_form.submit()\"></form>");
 		printFooter(pw);
 	}
 
 	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
 		String message = "Okay";
 		PrintWriter pw = resp.getWriter();
 		printHtmlHead(pw);
 		String contentType = req.getContentType();
-		if (contentType != null && contentType.toLowerCase().indexOf("multipart/form-data") >= 0) {
+		if (contentType != null
+				&& contentType.toLowerCase().indexOf("multipart/form-data") >= 0) {
 			MultipartParser mpp = new MultipartParser(req, resp);
-			String fileName = (String) mpp.getParameter("app_file+" + MultipartParser.FILENAME);
+			String fileName = (String) mpp.getParameter("app_file+"
+					+ MultipartParser.FILENAME);
 			message = "Nothing uploaded";
 			if (fileName != null) {
 				int sp = fileName.lastIndexOf('\\');
@@ -121,13 +128,22 @@ public class Settings extends HttpServlet {
 				sp = fileName.lastIndexOf('/');
 				if (sp >= 0)
 					fileName = fileName.substring(sp + 1);
-				
+
 				Object data = mpp.getParameter("app_file");
 				if (data instanceof byte[]) {
-					FileOutputStream fos = new FileOutputStream(new File(atjeews.deployDir, fileName));
-					fos.write((byte[])data);
-					fos.close();
-					message = fileName+" stored";
+					FileOutputStream fos = null;
+					if (fileName.toLowerCase().endsWith(".war"))
+						fos = new FileOutputStream(new File(atjeews.deployDir,
+								fileName));
+					else if (TJWSServ.KEYSTORE.equals(fileName)) {
+						fos = new FileOutputStream(new File(atjeews.getKeyDir(), TJWSServ.KEYSTORE));
+					} else
+						message = fileName + " isn't supported type";
+					if (fos != null) {
+						fos.write((byte[]) data);
+						fos.close();
+						message = fileName + " stored";
+					}
 				}
 			}
 		} else {
@@ -150,7 +166,7 @@ public class Settings extends HttpServlet {
 					if (val.equals(req.getParameter("password2")))
 						atjeews.config.password = val;
 					else
-						message = "Password has not been set";
+						message = "Passwords are not match";
 				} else if (atjeews.config.password != null)
 					atjeews.config.password = null;
 				atjeews.updateRealm();
@@ -160,7 +176,8 @@ public class Settings extends HttpServlet {
 				atjeews.config.bindAddr = val;
 			else
 				atjeews.config.bindAddr = null;
-			atjeews.config.virtualHost = Boolean.TRUE.toString().equals(req.getParameter("virt_host"));
+			atjeews.config.virtualHost = Boolean.TRUE.toString().equals(
+					req.getParameter("virt_host"));
 			val = req.getParameter("home_dir");
 			if (val.length() > 0) {
 				System.setProperty(Config.APP_HOME, val);
@@ -170,7 +187,8 @@ public class Settings extends HttpServlet {
 			atjeews.initDeployDirectory();
 			atjeews.storeConfig();
 		}
-		pw.print("<center>" + message + ".</center><br><a href=\"/settings\">Go back<a> to settings");
+		pw.print("<center>" + message
+				+ ".</center><br><a href=\"/settings\">Go back<a> to settings");
 		printFooter(pw);
 	}
 
@@ -180,7 +198,7 @@ public class Settings extends HttpServlet {
 	}
 
 	private void printHtmlHead(PrintWriter pw) {
-		pw.print("<HTML><HEAD><TITLE>");
+		pw.print("<HTML><HEAD><TITLE>Settings - ");
 		pw.print(Main.APP_NAME);
 		pw.print("</TITLE><meta name=\"viewport\" content=\"width=device-width, user-scalable=no\" />");
 		pw.print("<SCRIPT>function updateBindAddr(sel) { if(sel.selectedIndex ==0) document.forms[0].bind_addr.value=''; else document.forms[0].bind_addr.value=sel.options[sel.selectedIndex].value;  }</SCRIPT>");

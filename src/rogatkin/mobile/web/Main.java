@@ -33,6 +33,7 @@ import android.widget.EditText;
 import android.widget.HeaderViewListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * Atjeews Android launcher of TJWS with administration support
@@ -43,11 +44,11 @@ import android.widget.TextView;
 public class Main extends Activity {
 	public static final String APP_NAME = "Atjeews";
 
-	public static final int APP_VER_MN = 4;
+	public static final int APP_VER_MN = 5;
 
 	public static final int APP_VER_MJ = 1;
 	
-	public static final boolean DEBUG = false;
+	public static final boolean DEBUG = true;;
 
 	protected Config config;
 	protected ArrayList<String> servletsList;
@@ -150,7 +151,7 @@ public class Main extends Activity {
 		listView.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, servletsList));
 		registerForContextMenu(listView);
 
-		CheckBox checkbox = (CheckBox) findViewById(R.id.checkBox1);
+		CheckBox checkbox = (CheckBox) findViewById(R.id.checkStrt);
 		checkbox.requestFocus();
 		checkbox.setOnClickListener(new OnClickListener() {
 
@@ -224,7 +225,7 @@ public class Main extends Activity {
 	private void updateStatus() {
 		RCServ servCtrl = ((TJWSApp)getApplication()).getServiceControl();
 		try {
-			CheckBox startBtn = (CheckBox) findViewById(R.id.checkBox1);
+			CheckBox startBtn = (CheckBox) findViewById(R.id.checkStrt);
 			boolean stopped = servCtrl.getStatus() != TJWSServ.ST_RUN;
 			if (startBtn.isChecked()) {
 				if (stopped)
@@ -369,8 +370,10 @@ public class Main extends Activity {
 		if (running)
 			setTitle(APP_NAME + " [" + hostName + "]:" + config.port + "  @"
 					+ (Runtime.getRuntime().maxMemory() / 1024 / 1024) + "m");
-		else
+		else {
 			setTitle(APP_NAME);
+			((CheckBox) findViewById(R.id.checkStrt)).setChecked(false);
+		}
 	}
 
 	private void start() {		
@@ -401,6 +404,7 @@ public class Main extends Activity {
 		if (problem instanceof NullPointerException == false)
 			if (DEBUG)
 				Log.e(APP_NAME, "Unexpected problem:" + problem, problem);
+		Toast.makeText(this, ""+problem,  Toast.LENGTH_LONG).show();
 	}
 
 }

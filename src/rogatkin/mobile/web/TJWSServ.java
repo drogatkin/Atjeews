@@ -52,7 +52,10 @@ public class TJWSServ extends Service {
 
 	public static final String LOGDIR = "atjeews/log";
 
-	public static final String KEYSTORE_PATH = "atjeews/key/keystore";
+	public static final String KEYSTORE_DIR = "key";
+	
+	public static final String KEYSTORE = "keystore";
+	
 	public static final int ST_RUN = 1;
 	public static final int ST_STOP = 0;
 	public static final int ST_ERR = -1;
@@ -64,6 +67,8 @@ public class TJWSServ extends Service {
 	public File deployDir;
 
 	private int status;
+	
+	public boolean protectedFS = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT;
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -208,7 +213,9 @@ public class TJWSServ extends Service {
 	protected void initLogging() {
 		if (logStream != null)
 			return;
-		File logDir = new File(Environment.getExternalStorageDirectory(), LOGDIR);
+		File logDir = new File(protectedFS?getExternalCacheDir (): Environment.getExternalStorageDirectory(), LOGDIR);
+		if (Main.DEBUG)
+			Log.d(SERVICE_NAME,"Open log "+ logDir) ;
 		if (logDir.exists() && logDir.isDirectory() || logDir.mkdirs()) {
 			try {
 				logStream = new PrintStream(new File(logDir, "access-" + System.currentTimeMillis() + ".log"), "UTF-8");
@@ -230,7 +237,7 @@ public class TJWSServ extends Service {
 			return;
 		if (Main.DEBUG)
 			Log.d(SERVICE_NAME, "use sd:"+config.useSD+", deployed to:"+deployDir);
-		config.useSD = 	android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.GINGERBREAD_MR1;
+		config.useSD = 	!protectedFS;
 		if (config.useSD) {
 			deployDir = new File(Environment.getExternalStorageDirectory(), DEPLOYMENTDIR);
 			if (deployDir.exists() || deployDir.mkdirs())
@@ -239,7 +246,7 @@ public class TJWSServ extends Service {
 				config.useSD = false;
 		}
 		if (config.useSD == false) {
-			deployDir = new File(System.getProperty(Config.APP_HOME), DEPLOYMENTDIR);
+			//deployDir = new File(System.getProperty(Config.APP_HOME), DEPLOYMENTDIR);
 			deployDir = new File(getFilesDir(), DEPLOYMENTDIR);
 			if (deployDir.exists() == false && deployDir.mkdirs() == false) {
 				if (Main.DEBUG)
@@ -288,6 +295,13 @@ public class TJWSServ extends Service {
 			realm.put("", config.password);
 		}
 		srv.setRealms(realms);
+	}
+	
+	protected File getKeyDir() {
+		File result = new File(deployDir, "../"+KEYSTORE_DIR);
+		if (!result.exists())
+			result.mkdirs();
+		return result;
 	}
 
 	void storeConfig() {
@@ -359,8 +373,9 @@ public class TJWSServ extends Service {
 		if (config.ssl) {
 			srv.arguments.put(Acme.Serve.Serve.ARG_ACCEPTOR_CLASS, "Acme.Serve.SSLAcceptor");
 			srv.arguments.put(Acme.Serve.SSLAcceptor.ARG_KEYSTOREFILE,
-					new File(Environment.getExternalStorageDirectory(), KEYSTORE_PATH).getPath());
-			srv.arguments.put(Acme.Serve.SSLAcceptor.ARG_KEYSTOREPASS, "changeme");
+					new File(getKeyDir(), KEYSTORE).getPath());
+			srv.arguments.put(Acme.Serve.SSLAcceptor.ARG_KEYSTOREPASS, config.password== null ||
+					config.password.isEmpty()?"changeme":config.password);
 			srv.arguments.put(Acme.Serve.SSLAcceptor.ARG_KEYSTORETYPE, "BKS");
 		} else
 			srv.arguments.remove(Acme.Serve.Serve.ARG_ACCEPTOR_CLASS);

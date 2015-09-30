@@ -11,7 +11,7 @@
     />
 <TableLayout android:id="@+id/tableLayout1" android:layout_width="wrap_content" android:layout_height="wrap_content">
    <TableRow>
-     <CheckBox android:id="@+id/checkBox1" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/enable_server"></CheckBox>
+     <CheckBox android:id="@+id/checkStrt" android:layout_height="wrap_content" android:layout_width="wrap_content" android:text="@string/enable_server"></CheckBox>
      <TextView android:layout_width="wrap_content" android:id="@+id/textView3" android:text="@string/at_port" android:layout_height="wrap_content" android:layout_margin="3dip"></TextView>
      <EditText android:layout_width="fill_parent" android:layout_height="wrap_content" android:id="@+id/editPort" android:inputType="number"></EditText>"
    </TableRow>

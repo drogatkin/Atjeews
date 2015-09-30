@@ -65,6 +65,7 @@ public class TJWSServ extends Service {
 	protected ArrayList<String> servletsList;
 	protected PrintStream logStream;
 	public File deployDir;
+	String host;
 
 	private int status;
 	
@@ -83,9 +84,9 @@ public class TJWSServ extends Service {
 
 		
 		public String start() throws RemoteException {
-			String result = updateNetworkSettings();
+			//String result = updateNetworkSettings();
 			startServ();
-			return result;
+			return host;
 		}
 
 		
@@ -160,6 +161,10 @@ public class TJWSServ extends Service {
 			new Thread() {
 				@Override
 				public void run() {
+					host = updateNetworkSettings();
+					synchronized(this) {
+						notify();
+					}
 					status = ST_RUN;
 					int code = 0;
 					try {
@@ -172,6 +177,9 @@ public class TJWSServ extends Service {
 					}
 				}
 			}.start();
+			synchronized(this) {
+				wait();
+			}
 		}
 	}
 

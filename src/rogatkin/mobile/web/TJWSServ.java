@@ -30,7 +30,10 @@ import rogatkin.web.WebAppServlet;
 import Acme.Utils;
 import Acme.Serve.FileServlet;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.net.wifi.WifiManager;
+import android.net.wifi.WifiManager.WifiLock;
 import android.os.Environment;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -53,9 +56,9 @@ public class TJWSServ extends Service {
 	public static final String LOGDIR = "atjeews/log";
 
 	public static final String KEYSTORE_DIR = "key";
-	
+
 	public static final String KEYSTORE = "keystore";
-	
+
 	public static final int ST_RUN = 1;
 	public static final int ST_STOP = 0;
 	public static final int ST_ERR = -1;
@@ -67,7 +70,9 @@ public class TJWSServ extends Service {
 	public File deployDir;
 
 	private int status;
-	
+
+	WifiLock wifiLock;
+
 	public boolean protectedFS = android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.GINGERBREAD_MR1;
 
 	@Override
@@ -75,67 +80,56 @@ public class TJWSServ extends Service {
 		if (Main.DEBUG)
 			Log.d(SERVICE_NAME, "Binding from " + intent.getClass().getName());
 		initServ();
-		
+
 		return mBinder;
 	}
 
 	private final RCServ.Stub mBinder = new RCServ.Stub() {
 
-		
 		public String start() throws RemoteException {
 			String result = updateNetworkSettings();
 			startServ();
 			return result;
 		}
 
-		
 		public void stop() throws RemoteException {
 			stopServ();
 		}
 
-		
 		public int getStatus() throws RemoteException {
 			return status;
 		}
 
-	
 		public void logging(boolean enable) throws RemoteException {
 			srv.setAccessLogged(enable);
 		}
 
-		
 		public List<String> getApps() throws RemoteException {
 			return servletsList;
 		}
-
 
 		public String deployApp(String url) throws RemoteException {
 			return deployAppFrom(url);
 		}
 
-	
 		public List<String> rescanApps() throws RemoteException {
 			scanDeployments();
 			updateServletsList();
 			return servletsList;
 		}
 
-
 		public String getAppInfo(String name) throws RemoteException {
 			return (String) doAppOper(OperCode.info, name);
 		}
 
-	
 		public List<String> stopApp(String name) throws RemoteException {
 			return (List<String>) doAppOper(OperCode.stop, name);
 		}
 
-		
 		public void removeApp(String name) throws RemoteException {
 			doAppOper(OperCode.remove, name);
 		}
 
-		
 		public List<String> redeployApp(String name) throws RemoteException {
 			return (List<String>) doAppOper(OperCode.deploy, name);
 		}
@@ -162,12 +156,22 @@ public class TJWSServ extends Service {
 				public void run() {
 					status = ST_RUN;
 					int code = 0;
+					if (wifiLock == null) {
+						WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+						wifiLock = wifiManager.createWifiLock(SERVICE_NAME);
+					}
 					try {
+						// wifiLock.acquire();
 						code = srv.serve();
-						if (Main.DEBUG)
-							Log.d(SERVICE_NAME, "Serve terminated with :"+code);
+						if (Main.DEBUG) {
+							Log.d(SERVICE_NAME, "Serve terminated with :"
+									+ code);
+							srv.log("Serve terminated with :" + code);
+						}
 					} finally {
-						status = code==0?ST_STOP:ST_ERR;
+						if (wifiLock != null && wifiLock.isHeld())
+							wifiLock.release();
+						status = code == 0 ? ST_STOP : ST_ERR;
 						// TODO find out how notify client
 					}
 				}
@@ -190,21 +194,28 @@ public class TJWSServ extends Service {
 		properties.setProperty(Acme.Serve.Serve.ARG_NOHUP, "nohup");
 		// properties.put(Acme.Serve.Serve.ARG_KEEPALIVE, Boolean.FALSE);
 		// log properties
-		properties.setProperty(Acme.Serve.Serve.ARG_ACCESS_LOG_FMT,
-				"{0} {2} [{3,date,dd/MMM/yy:HH:mm:ss Z}] \"{4} {5} {6}\" {7,number,#}");
+		properties
+				.setProperty(Acme.Serve.Serve.ARG_ACCESS_LOG_FMT,
+						"{0} {2} [{3,date,dd/MMM/yy:HH:mm:ss Z}] \"{4} {5} {6}\" {7,number,#}");
 		// //// JSP /////
-		properties.setProperty(Acme.Serve.Serve.ARG_JSP, "org.apache.jasper.servlet.JspServlet");
-		properties.setProperty("org.apache.jasper.servlet.JspServlet.classpath", "%classpath%");
-		properties.setProperty("org.apache.jasper.servlet.JspServlet.scratchdir", "%deploydir%/META-INF/jsp-classes");
+		properties.setProperty(Acme.Serve.Serve.ARG_JSP,
+				"org.apache.jasper.servlet.JspServlet");
+		properties
+				.setProperty("org.apache.jasper.servlet.JspServlet.classpath",
+						"%classpath%");
+		properties.setProperty(
+				"org.apache.jasper.servlet.JspServlet.scratchdir",
+				"%deploydir%/META-INF/jsp-classes");
 		// //////////
-		srv = new AndroidServ(properties, logStream, (Object)this);
+		srv = new AndroidServ(properties, logStream, (Object) this);
 		updateRealm();
 		updateWWWServlet();
 		// add settings servlet
 		srv.addServlet("/settings", new Settings(this));
 		System.setProperty(WebAppServlet.WAR_NAME_AS_CONTEXTPATH, "yes");
 		// set dex class loader
-		System.setProperty(WebApp.DEF_WEBAPP_CLASSLOADER, AndroidClassLoader.class.getName()); // "rogatkin.mobile.web.AndroidClassLoader"
+		System.setProperty(WebApp.DEF_WEBAPP_CLASSLOADER,
+				AndroidClassLoader.class.getName()); // "rogatkin.mobile.web.AndroidClassLoader"
 		initDeployDirectory();
 		srv.deployApps();
 		updateServletsList();
@@ -213,12 +224,14 @@ public class TJWSServ extends Service {
 	protected void initLogging() {
 		if (logStream != null)
 			return;
-		File logDir = new File(protectedFS?getExternalCacheDir (): Environment.getExternalStorageDirectory(), LOGDIR);
+		File logDir = new File(protectedFS ? getExternalCacheDir()
+				: Environment.getExternalStorageDirectory(), LOGDIR);
 		if (Main.DEBUG)
-			Log.d(SERVICE_NAME,"Open log "+ logDir) ;
+			Log.d(SERVICE_NAME, "Open log " + logDir);
 		if (logDir.exists() && logDir.isDirectory() || logDir.mkdirs()) {
 			try {
-				logStream = new PrintStream(new File(logDir, "access-" + System.currentTimeMillis() + ".log"), "UTF-8");
+				logStream = new PrintStream(new File(logDir, "access-"
+						+ System.currentTimeMillis() + ".log"), "UTF-8");
 			} catch (Exception e) {
 				if (Main.DEBUG)
 					Log.e(SERVICE_NAME, "Can't create log file", e);
@@ -232,37 +245,47 @@ public class TJWSServ extends Service {
 
 	protected void initDeployDirectory() {
 		if (Main.DEBUG)
-			Log.d(SERVICE_NAME, "deploy dir:"+deployDir+", for app:"+getFilesDir());
+			Log.d(SERVICE_NAME, "deploy dir:" + deployDir + ", for app:"
+					+ getFilesDir());
 		if (deployDir != null && deployDir.exists())
 			return;
 		if (Main.DEBUG)
-			Log.d(SERVICE_NAME, "use sd:"+config.useSD+", deployed to:"+deployDir);
-		config.useSD = 	!protectedFS;
+			Log.d(SERVICE_NAME, "use sd:" + config.useSD + ", deployed to:"
+					+ deployDir);
+		config.useSD = !protectedFS;
 		if (config.useSD) {
-			deployDir = new File(Environment.getExternalStorageDirectory(), DEPLOYMENTDIR);
+			deployDir = new File(Environment.getExternalStorageDirectory(),
+					DEPLOYMENTDIR);
 			if (deployDir.exists() || deployDir.mkdirs())
-				System.setProperty(WebApp.DEF_WEBAPP_AUTODEPLOY_DIR, deployDir.getPath());
+				System.setProperty(WebApp.DEF_WEBAPP_AUTODEPLOY_DIR,
+						deployDir.getPath());
 			else
 				config.useSD = false;
 		}
 		if (config.useSD == false) {
-			//deployDir = new File(System.getProperty(Config.APP_HOME), DEPLOYMENTDIR);
+			// deployDir = new File(System.getProperty(Config.APP_HOME),
+			// DEPLOYMENTDIR);
 			deployDir = new File(getFilesDir(), DEPLOYMENTDIR);
 			if (deployDir.exists() == false && deployDir.mkdirs() == false) {
 				if (Main.DEBUG)
-					Log.e(SERVICE_NAME, "Can't establish web apps deployment directory:"+deployDir);
+					Log.e(SERVICE_NAME,
+							"Can't establish web apps deployment directory:"
+									+ deployDir);
 				deployDir = new File("/sdcard", DEPLOYMENTDIR);
 			}
-			System.setProperty(WebApp.DEF_WEBAPP_AUTODEPLOY_DIR, deployDir.getPath());
+			System.setProperty(WebApp.DEF_WEBAPP_AUTODEPLOY_DIR,
+					deployDir.getPath());
 		}
 		if (Main.DEBUG)
-			Log.d(SERVICE_NAME, "deploy dir "+deployDir+" is "+deployDir.exists());
+			Log.d(SERVICE_NAME,
+					"deploy dir " + deployDir + " is " + deployDir.exists());
 	}
 
 	protected void updateWWWServlet() {
 		Servlet rootServlet = srv.getServlet("/*");
 		if (Main.DEBUG)
-			Log.d(SERVICE_NAME, "Root app :" + config.rootApp + ", servlet / " + rootServlet);
+			Log.d(SERVICE_NAME, "Root app :" + config.rootApp + ", servlet / "
+					+ rootServlet);
 		if ("/".equals(config.rootApp)) {
 
 			Acme.Serve.Serve.PathTreeDictionary aliases = new Acme.Serve.Serve.PathTreeDictionary();
@@ -277,10 +300,12 @@ public class TJWSServ extends Service {
 			if (rootServlet != null) {
 				srv.unloadServlet(rootServlet);
 				rootServlet.destroy();
-				srv.unloadSessions(rootServlet.getServletConfig().getServletContext());
+				srv.unloadSessions(rootServlet.getServletConfig()
+						.getServletContext());
 			}
 			if (config.rootApp != null) {
-				System.setProperty(WebAppServlet.WAR_DEPLOY_IN_ROOT, config.rootApp.substring(1));
+				System.setProperty(WebAppServlet.WAR_DEPLOY_IN_ROOT,
+						config.rootApp.substring(1));
 			} else {
 				System.getProperties().remove(WebAppServlet.WAR_DEPLOY_IN_ROOT);
 			}
@@ -291,14 +316,15 @@ public class TJWSServ extends Service {
 		Acme.Serve.Serve.PathTreeDictionary realms = new Acme.Serve.Serve.PathTreeDictionary();
 		if (config.password != null && config.password.length() > 0) {
 			Acme.Serve.Serve.BasicAuthRealm realm;
-			realms.put("/settings", realm = new Acme.Serve.Serve.BasicAuthRealm(Main.APP_NAME));
+			realms.put("/settings",
+					realm = new Acme.Serve.Serve.BasicAuthRealm(Main.APP_NAME));
 			realm.put("", config.password);
 		}
 		srv.setRealms(realms);
 	}
-	
+
 	protected File getKeyDir() {
-		File result = new File(deployDir, "../"+KEYSTORE_DIR);
+		File result = new File(deployDir, "../" + KEYSTORE_DIR);
 		if (!result.exists())
 			result.mkdirs();
 		return result;
@@ -314,26 +340,31 @@ public class TJWSServ extends Service {
 				return InetAddress.getByName(config.bindAddr);
 		} catch (UnknownHostException e) {
 			if (Main.DEBUG)
-				Log.e(SERVICE_NAME, "Can't resolve :" + config.bindAddr + " " + e.toString());
+				Log.e(SERVICE_NAME, "Can't resolve :" + config.bindAddr + " "
+						+ e.toString());
 			return null;
 		}
 		return getLookbackAddress();
-		//return getNonLookupAddress();
+		// return getNonLookupAddress();
 	}
-	
+
 	public static InetAddress getLookbackAddress() {
 		InetAddress result = null;
 		try {
-			for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+			for (Enumeration<NetworkInterface> en = NetworkInterface
+					.getNetworkInterfaces(); en.hasMoreElements();) {
 				NetworkInterface intf = en.nextElement();
-				for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+				for (Enumeration<InetAddress> enumIpAddr = intf
+						.getInetAddresses(); enumIpAddr.hasMoreElements();) {
 					InetAddress inetAddress = enumIpAddr.nextElement();
 					if (inetAddress.isLoopbackAddress()) {
-						if (inetAddress.isSiteLocalAddress() == false && InetAddressUtils.isIPv4Address(inetAddress.getHostAddress()))
+						if (inetAddress.isSiteLocalAddress() == false
+								&& InetAddressUtils.isIPv4Address(inetAddress
+										.getHostAddress()))
 							return inetAddress;
 						result = inetAddress;
-						//if (Main.DEBUG)
-							//Log.e(SERVICE_NAME, "processed addr:"+result);
+						// if (Main.DEBUG)
+						// Log.e(SERVICE_NAME, "processed addr:"+result);
 					}
 				}
 			}
@@ -343,16 +374,20 @@ public class TJWSServ extends Service {
 		}
 		return result;
 	}
-	
+
 	public static InetAddress getNonLookupAddress() {
 		InetAddress result = null;
 		try {
-			for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+			for (Enumeration<NetworkInterface> en = NetworkInterface
+					.getNetworkInterfaces(); en.hasMoreElements();) {
 				NetworkInterface intf = en.nextElement();
-				for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+				for (Enumeration<InetAddress> enumIpAddr = intf
+						.getInetAddresses(); enumIpAddr.hasMoreElements();) {
 					InetAddress inetAddress = enumIpAddr.nextElement();
 					if (!inetAddress.isLoopbackAddress()) {
-						if (inetAddress.isSiteLocalAddress() == false && InetAddressUtils.isIPv4Address(inetAddress.getHostAddress()))
+						if (inetAddress.isSiteLocalAddress() == false
+								&& InetAddressUtils.isIPv4Address(inetAddress
+										.getHostAddress()))
 							return inetAddress;
 						result = inetAddress;
 					}
@@ -371,31 +406,41 @@ public class TJWSServ extends Service {
 		srv.arguments.put(Acme.Serve.Serve.ARG_PORT, config.port);
 		// SSL
 		if (config.ssl) {
-			srv.arguments.put(Acme.Serve.Serve.ARG_ACCEPTOR_CLASS, "Acme.Serve.SSLAcceptor");
+			srv.arguments.put(Acme.Serve.Serve.ARG_ACCEPTOR_CLASS,
+					"Acme.Serve.SSLAcceptor");
 			srv.arguments.put(Acme.Serve.SSLAcceptor.ARG_KEYSTOREFILE,
 					new File(getKeyDir(), KEYSTORE).getPath());
-			srv.arguments.put(Acme.Serve.SSLAcceptor.ARG_KEYSTOREPASS, config.password== null ||
-					config.password.isEmpty()?"changeme":config.password);
+			srv.arguments
+					.put(Acme.Serve.SSLAcceptor.ARG_KEYSTOREPASS,
+							config.password == null
+									|| config.password.isEmpty() ? "changeme"
+									: config.password);
 			srv.arguments.put(Acme.Serve.SSLAcceptor.ARG_KEYSTORETYPE, "BKS");
+			if (Main.DEBUG)
+				srv.log("SSL configured as:" + srv.arguments);
 		} else
 			srv.arguments.remove(Acme.Serve.Serve.ARG_ACCEPTOR_CLASS);
 		srv.setAccessLogged(config.logEnabled);
-		
+
 		// bind address
 		if (Main.DEBUG)
-			Log.d(SERVICE_NAME, "bind to "+config.bindAddr+",use sd:"+config.useSD+", deployed to:"+deployDir);
-		/*if (config.bindAddr == null) {
-			srv.arguments.put(Acme.Serve.Serve.ARG_BINDADDRESS, "127:0:0:1");
-			return "localhost";
-		}*/
+			Log.d(SERVICE_NAME, "bind to " + config.bindAddr + ",use sd:"
+					+ config.useSD + ", deployed to:" + deployDir);
+		/*
+		 * if (config.bindAddr == null) {
+		 * srv.arguments.put(Acme.Serve.Serve.ARG_BINDADDRESS, "127:0:0:1");
+		 * return "localhost"; }
+		 */
 		InetAddress iadr = getLocalIpAddress();
 		if (iadr != null) {
 			String canonicalAddr = iadr.getCanonicalHostName();
-			if (canonicalAddr != null && "null".equals(canonicalAddr) == false) { // Android bug
+			if (canonicalAddr != null && "null".equals(canonicalAddr) == false) { // Android
+																					// bug
 				if (iadr.isAnyLocalAddress() == false) {
-					srv.arguments.put(Acme.Serve.Serve.ARG_BINDADDRESS, iadr.getHostAddress());
+					srv.arguments.put(Acme.Serve.Serve.ARG_BINDADDRESS,
+							iadr.getHostAddress());
 					if (Main.DEBUG)
-						Log.e(SERVICE_NAME, "bound:"+canonicalAddr);
+						Log.e(SERVICE_NAME, "bound:" + canonicalAddr);
 					return canonicalAddr;
 				} else {
 					srv.arguments.remove(Acme.Serve.Serve.ARG_BINDADDRESS);
@@ -428,16 +473,20 @@ public class TJWSServ extends Service {
 			File warFile;
 			URLConnection ucon = url.openConnection();
 			ucon.setConnectTimeout(30 * 1000);
-			Utils.copyStream(cis = ucon.getInputStream(), fos = new FileOutputStream(warFile = new File(deployDir,
-					appFile)), 1024 * 1024 * 512);
+			Utils.copyStream(cis = ucon.getInputStream(),
+					fos = new FileOutputStream(warFile = new File(deployDir,
+							appFile)), 1024 * 1024 * 512);
 			if (appFile.endsWith(WarRoller.DEPLOY_ARCH_EXT) == false
 					|| appFile.length() <= WarRoller.DEPLOY_ARCH_EXT.length()) {
 				if (Main.DEBUG)
-					Log.e(SERVICE_NAME, " Invalid extension for web archive file: " + appFile
-						+ ", it is stored but not deployed");
+					Log.e(SERVICE_NAME,
+							" Invalid extension for web archive file: "
+									+ appFile
+									+ ", it is stored but not deployed");
 				return "Invalid extension for web archive file: " + appFile;
 			}
-			redeploy(appFile.substring(0, appFile.length() - WarRoller.DEPLOY_ARCH_EXT.length()));
+			redeploy(appFile.substring(0, appFile.length()
+					- WarRoller.DEPLOY_ARCH_EXT.length()));
 			if (Main.DEBUG)
 				Log.d(SERVICE_NAME, appFile + " has been deployed");
 			// update list
@@ -465,29 +514,42 @@ public class TJWSServ extends Service {
 		deployDir.listFiles(new FileFilter() {
 			public boolean accept(File pathname) {
 				String fileName = pathname.getName();
-				String appName = pathname.isFile() && fileName.toLowerCase().endsWith(WarRoller.DEPLOY_ARCH_EXT) ? fileName
-						.substring(0, fileName.length() - WarRoller.DEPLOY_ARCH_EXT.length()) : null;
-				if (appName != null && findServlet("/" + appName + "/*") == false) {
-					srv.getDeployer().deployWar(pathname, new File(deployDir, WarRoller.DEPLOYMENT_DIR_TARGET));
+				String appName = pathname.isFile()
+						&& fileName.toLowerCase().endsWith(
+								WarRoller.DEPLOY_ARCH_EXT) ? fileName
+						.substring(0, fileName.length()
+								- WarRoller.DEPLOY_ARCH_EXT.length()) : null;
+				if (appName != null
+						&& findServlet("/" + appName + "/*") == false) {
+					srv.getDeployer()
+							.deployWar(
+									pathname,
+									new File(deployDir,
+											WarRoller.DEPLOYMENT_DIR_TARGET));
 					if (Main.DEBUG)
-						Log.d(SERVICE_NAME, "Found a not deployed app  " + appName);
+						Log.d(SERVICE_NAME, "Found a not deployed app  "
+								+ appName);
 					return true;
 				}
 				return false;
 			}
 		});
 		// scan for already deployed but not launched
-		File[] deployedFiles = new File(deployDir, WarRoller.DEPLOYMENT_DIR_TARGET).listFiles();
+		File[] deployedFiles = new File(deployDir,
+				WarRoller.DEPLOYMENT_DIR_TARGET).listFiles();
 		if (deployedFiles == null) {
 			if (Main.DEBUG)
-				Log.e(SERVICE_NAME, "Invaid deploy directory: " + new File(deployDir, WarRoller.DEPLOYMENT_DIR_TARGET));
+				Log.e(SERVICE_NAME, "Invaid deploy directory: "
+						+ new File(deployDir, WarRoller.DEPLOYMENT_DIR_TARGET));
 			return;
 		}
 
 		for (File deployedFile : deployedFiles) {
-			if (deployedFile.isDirectory() && findServlet("/" + deployedFile.getName() + "/*") == false) {
+			if (deployedFile.isDirectory()
+					&& findServlet("/" + deployedFile.getName() + "/*") == false) {
 				if (Main.DEBUG)
-					Log.d(SERVICE_NAME, "Found not deployed app  " + deployedFile);
+					Log.d(SERVICE_NAME, "Found not deployed app  "
+							+ deployedFile);
 				srv.deployApp(deployedFile.getName());
 			}
 		}
@@ -500,7 +562,8 @@ public class TJWSServ extends Service {
 				Log.e(SERVICE_NAME, "No servlet found for " + appName);
 			return null;
 		}
-		WebAppServlet appServlet = servlet instanceof WebAppServlet ? (WebAppServlet) servlet : null;
+		WebAppServlet appServlet = servlet instanceof WebAppServlet ? (WebAppServlet) servlet
+				: null;
 		switch (oc) {
 		case info:
 			return servlet.getServletInfo();
@@ -513,28 +576,32 @@ public class TJWSServ extends Service {
 		case remove:
 			if (appServlet != null) {
 				if (appName.endsWith("/*"))
-					appName = appName.substring(1, appName.length()-2);
+					appName = appName.substring(1, appName.length() - 2);
 				else if (appName.endsWith("/"))
-					appName = appName.substring(1, appName.length()-1);
-				File appWar = new File(deployDir, appName + WarRoller.DEPLOY_ARCH_EXT);
+					appName = appName.substring(1, appName.length() - 1);
+				File appWar = new File(deployDir, appName
+						+ WarRoller.DEPLOY_ARCH_EXT);
 				if (appWar.delete() == false)
 					if (Main.DEBUG)
 						Log.e(SERVICE_NAME, "File can't be deleted " + appWar);
-				else {
-					File appFile = new File(new File(deployDir, WarRoller.DEPLOYMENT_DIR_TARGET), appName);
-					if (deleteRecursively(appFile) == false) {
-						if (Main.DEBUG)
-							Log.e(SERVICE_NAME, "File can't be deleted " + appFile);
+					else {
+						File appFile = new File(new File(deployDir,
+								WarRoller.DEPLOYMENT_DIR_TARGET), appName);
+						if (deleteRecursively(appFile) == false) {
+							if (Main.DEBUG)
+								Log.e(SERVICE_NAME, "File can't be deleted "
+										+ appFile);
+						}
 					}
-				}
 			} else if (Main.DEBUG)
-				Log.e(SERVICE_NAME, "Can't find app " + appName+" to remove");
+				Log.e(SERVICE_NAME, "Can't find app " + appName + " to remove");
 			return null;
 		case stop:
 			servlet = srv.unloadServlet(servlet);
 			if (servlet != null) {
 				servlet.destroy();
-				srv.unloadSessions(servlet.getServletConfig().getServletContext());
+				srv.unloadSessions(servlet.getServletConfig()
+						.getServletContext());
 			} else if (Main.DEBUG)
 				Log.e(SERVICE_NAME, "Couldn't unload servlet for " + appName);
 			updateServletsList();
@@ -550,8 +617,10 @@ public class TJWSServ extends Service {
 			servlet = srv.unloadServlet(servlet);
 			if (servlet != null && servlet instanceof WebAppServlet) {
 				servlet.destroy();
-				srv.unloadSessions(servlet.getServletConfig().getServletContext());
-				File dexCacheDir = new File(new File(new File(deployDir, WarRoller.DEPLOYMENT_DIR_TARGET), appName),
+				srv.unloadSessions(servlet.getServletConfig()
+						.getServletContext());
+				File dexCacheDir = new File(new File(new File(deployDir,
+						WarRoller.DEPLOYMENT_DIR_TARGET), appName),
 						"META-INF/DEX/" + SERVICE_NAME);
 				// Log.d(APP_NAME, ""+dexCacheDir);
 				if (dexCacheDir.exists() && dexCacheDir.isAbsolute()) {
@@ -559,7 +628,8 @@ public class TJWSServ extends Service {
 				}
 			}
 		}
-		srv.getDeployer().deployWar(new File(deployDir, appName + WarRoller.DEPLOY_ARCH_EXT),
+		srv.getDeployer().deployWar(
+				new File(deployDir, appName + WarRoller.DEPLOY_ARCH_EXT),
 				new File(deployDir, WarRoller.DEPLOYMENT_DIR_TARGET));
 		srv.deployApp(appName);
 	}
@@ -600,9 +670,12 @@ public class TJWSServ extends Service {
 	class AndroidServ extends Acme.Serve.Serve {
 		private WarRoller deployer;
 
-		public AndroidServ(Properties arguments, PrintStream logStream, Object runtime) {
+		public AndroidServ(Properties arguments, PrintStream logStream,
+				Object runtime) {
 			super(arguments, logStream);
-			WebAppServlet.setRuntimeEnv(runtime); // provide servlet context Android environment access
+			WebAppServlet.setRuntimeEnv(runtime); // provide servlet context
+													// Android environment
+													// access
 		}
 
 		// Overriding method for public access
@@ -625,16 +698,19 @@ public class TJWSServ extends Service {
 				if (t instanceof ThreadDeath)
 					throw (ThreadDeath) t;
 				if (Main.DEBUG)
-					Log.e(SERVICE_NAME, "Unexpected problem in deploying apps", t);
+					Log.e(SERVICE_NAME, "Unexpected problem in deploying apps",
+							t);
 			}
 		}
 
 		public synchronized boolean deployApp(String appName) {
 			// deployer must be not null
 			try {
-				WebAppServlet webAppServlet = WebAppServlet.create(new File(new File(deployDir,
-						WarRoller.DEPLOYMENT_DIR_TARGET), appName), appName, this, null);
-				addServlet(webAppServlet.getContextPath() + "/*", webAppServlet, null);
+				WebAppServlet webAppServlet = WebAppServlet.create(new File(
+						new File(deployDir, WarRoller.DEPLOYMENT_DIR_TARGET),
+						appName), appName, this, null);
+				addServlet(webAppServlet.getContextPath() + "/*",
+						webAppServlet, null);
 				return true;
 			} catch (Throwable t) {
 				if (t instanceof ThreadDeath)

@@ -33,7 +33,6 @@ import android.widget.EditText;
 import android.widget.HeaderViewListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 /**
  * Atjeews Android launcher of TJWS with administration support
@@ -48,7 +47,7 @@ public class Main extends Activity {
 
 	public static final int APP_VER_MJ = 1;
 
-	public static final boolean DEBUG = true;;
+	public static final boolean DEBUG = false;;
 
 	protected Config config;
 	protected ArrayList<String> servletsList;
@@ -239,7 +238,7 @@ public class Main extends Activity {
 			} else if (stopped == false) {
 				startBtn.setChecked(true);
 				if (hostName == null)
-					hostName = servCtrl.start();
+					start(servCtrl);
 			}
 		} catch (Exception e) {
 			reportProblem(e);
@@ -403,6 +402,10 @@ public class Main extends Activity {
 
 	private void start() {
 		storeConfig();
+		start(((TJWSApp) getApplication()).getServiceControl());
+	}
+	
+	private void start(RCServ serv) {
 		new AsyncTask<RCServ, Void, String>() {
 
 			@Override
@@ -420,7 +423,7 @@ public class Main extends Activity {
 				}
 				return null;
 			}
-		}.execute(((TJWSApp) getApplication()).getServiceControl());
+		}.execute(serv);
 	}
 
 	private void stop() {
@@ -440,7 +443,7 @@ public class Main extends Activity {
 		if (problem instanceof NullPointerException == false)
 			if (DEBUG)
 				Log.e(APP_NAME, "Unexpected problem:" + problem, problem);
-		Toast.makeText(this, "" + problem, Toast.LENGTH_LONG).show();
+		//Toast.makeText(this, "" + problem, Toast.LENGTH_LONG).show();
 	}
 
 }

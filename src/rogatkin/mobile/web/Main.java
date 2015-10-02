@@ -47,7 +47,7 @@ public class Main extends Activity {
 
 	public static final int APP_VER_MJ = 1;
 
-	public static final boolean DEBUG = false;;
+	public static final boolean DEBUG = false;
 
 	protected Config config;
 	protected ArrayList<String> servletsList;
@@ -180,7 +180,7 @@ public class Main extends Activity {
 						}
 					}
 				});
-		updateUI();
+		//updateUI();
 	}
 
 	@Override
@@ -210,10 +210,11 @@ public class Main extends Activity {
 	}
 
 	private void updateUI() {
+		if (DEBUG)
+			Log.d(APP_NAME, "UI updated called");
 		RCServ servCtrl = ((TJWSApp) getApplication()).getServiceControl();
-
 		if (servCtrl != null) {
-			updateStatus();
+			updateStatus(servCtrl);
 			updateTitle();
 			try {
 				updateAppsList(servCtrl.getApps(), true);
@@ -227,19 +228,15 @@ public class Main extends Activity {
 			Log.d(APP_NAME, "service not started");
 	}
 
-	private void updateStatus() {
-		RCServ servCtrl = ((TJWSApp) getApplication()).getServiceControl();
+	private void updateStatus(RCServ servCtrl) {
 		try {
 			CheckBox startBtn = (CheckBox) findViewById(R.id.checkStrt);
 			boolean stopped = servCtrl.getStatus() != TJWSServ.ST_RUN;
-			if (startBtn.isChecked()) {
-				if (stopped)
-					startBtn.setChecked(false);
-			} else if (stopped == false) {
-				startBtn.setChecked(true);
-				if (hostName == null)
-					start(servCtrl);
-			}
+			if (DEBUG)
+				Log.d(APP_NAME, "run "+stopped+", checking run "+startBtn.isChecked());
+			//startBtn.setChecked(!stopped);
+			if (stopped == false && hostName == null)
+				start(servCtrl);
 		} catch (Exception e) {
 			reportProblem(e);
 		}
@@ -391,10 +388,11 @@ public class Main extends Activity {
 		boolean running = hostName != null;
 		((CheckBox) findViewById(R.id.checkSSL)).setEnabled(running == false);
 		((EditText) findViewById(R.id.editPort)).setEnabled(running == false);
-		if (running)
+		if (running) {
 			setTitle(APP_NAME + " [" + hostName + "]:" + config.port + "  @"
 					+ (Runtime.getRuntime().maxMemory() / 1024 / 1024) + "m");
-		else {
+			((CheckBox) findViewById(R.id.checkStrt)).setChecked(true);
+	} else {
 			setTitle(APP_NAME);
 			((CheckBox) findViewById(R.id.checkStrt)).setChecked(false);
 		}

@@ -676,6 +676,14 @@ public class TJWSServ extends Service {
 			WebAppServlet.setRuntimeEnv(runtime); // provide servlet context
 													// Android environment
 													// access
+			addWebsocketProvider(WSProvider.class.toString());
+		}
+		
+		@Override
+		protected void addWebsocketProvider(String provider) {
+			websocketProvider = new WSProvider();
+			websocketProvider.init(this);
+			websocketProvider.deploy(this, null);
 		}
 
 		// Overriding method for public access

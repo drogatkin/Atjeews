@@ -4,10 +4,11 @@
       <!ENTITY android_sdk "E:\tools\adt-bundle-windows-x86_64-20140702\sdk">
       <!ENTITY jasper_lib "E:\projects\jasper7\build\jasper.jar">
       <!ENTITY servlet_lib "E:\projects\servlet\javax.servlet.jar">
+      <!ENTITY tjws_wskt_lib "E:\projects\TJWS2\1.x\lib\wskt.jar">
+      <!ENTITY fast_scan_lib "E:\projects\fast-classpath-scanner\lib\class-scanner.jar">
       <!ENTITY target "4.4W">
 ]>
-<!-- $Id: bee-dexwar.xml,v 1.13 2012/09/15 17:48:30 dmitriy Exp $ Prepare 
-	war file for Android deployment Copyright (c) Dmitriy Rogatkin -->
+<!-- Prepare war file for Android deployment Copyright 2015 (c) Dmitriy Rogatkin -->
 <bee name="dexer" type="script">
     <variable name="dx path">&android_sdk;/build-tools/android-&target;/lib/dx.jar</variable>
     <expression name="jre crop">
@@ -233,6 +234,42 @@
                     </function>
                 </else>
             </if>
+            <!-- scan for websocket endpoints  -->
+            <expression name="web-inf">
+               <operator name="append">
+                  <value variable="unwar dir"/>
+                  <value>/WEB-INF</value>
+               </operator>
+            </expression>    
+            <expression name="ws-info">
+               <operator name="append">
+                  <value variable="unwar dir"/>
+                  <value>/META-INF/websocket</value>
+               </operator>
+            </expression>    
+            <function name="mkd">
+                <parameter variable="ws-info"/>
+            </function>
+            <expression name="ws-info">
+               <operator name="append">
+                  <value variable="ws-info"/>
+                  <value>/websocket.info</value>
+               </operator>
+            </expression>    
+            <expression name="scanner path">
+               <operator name="append">
+                  <value>&tjws_wskt_lib;</value>
+                  <value name="path.separator" type="property"/> 
+                  <value>&fast_scan_lib;</value>
+                  <value name="path.separator" type="property"/>
+                  <value type="repo_artifact">maven:javax.websocket:javax.websocket-api:1.1</value>
+               </operator>
+            </expression>
+            <echo>Processing server endpoints</echo>
+            <task name="scan" code="rogatkin.wskt.EndPointScanner" path="scanner path">
+                <parameter variable="web-inf"/>
+                <parameter variable="ws-info"/>
+            </task>
             <!--  take care JSP  -->
             <expression name="jsp dir">
                 <operator name="append">

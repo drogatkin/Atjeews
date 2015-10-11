@@ -33,6 +33,7 @@ import android.widget.EditText;
 import android.widget.HeaderViewListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 /**
  * Atjeews Android launcher of TJWS with administration support
@@ -75,12 +76,16 @@ public class Main extends Activity {
 		button.setOnClickListener(new OnClickListener() {
 
 			public void onClick(View v) {
-				EditText surl = (EditText) findViewById(R.id.editText1);
+				final EditText surl = (EditText) findViewById(R.id.editText1);
 				String userInput = surl.getText().toString();
 				InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 				imm.hideSoftInputFromWindow(surl.getWindowToken(), 0);
 				if (userInput.length() <= "http://".length()) {
-					// show message box - can't deploy
+					Toast.makeText(Main.this, "Please specify location URL of .war", Toast.LENGTH_SHORT).show();
+					return;
+				}
+				if (config.app_deploy_lock) {
+					Toast.makeText(Main.this, "Deploying new apps is locked", Toast.LENGTH_SHORT).show();
 					return;
 				}
 				new AsyncTask<String, Void, Void>() {
@@ -103,6 +108,7 @@ public class Main extends Activity {
 							builder.create().show();
 						} else {
 							if (lastError == null) {
+								surl.setText("http://");
 								try {
 									fillServlets(servCtrl.getApps());
 								} catch (Exception e) {

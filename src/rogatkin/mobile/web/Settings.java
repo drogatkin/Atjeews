@@ -68,7 +68,10 @@ public class Settings extends HttpServlet {
 		pw.print("<tr><td>Serviced folder</td><td><input type=\"text\" name=\"webroot\" value=\"");
 		if (atjeews.config.wwwFolder != null)
 			pw.print(Utils.htmlEncode(atjeews.config.wwwFolder, false));
-		pw.print("\"></td></tr><tr><td>Virt host</td><td><input type=\"checkbox\" name=\"virt_host\" value=\"true\"></td></tr>");
+		pw.print("\"></td></tr><tr><td>Virt host</td><td><input type=\"checkbox\" name=\"virt_host\" value=\"true\"");
+		if (atjeews.config.virtualHost)
+			pw.print(" checked");
+		pw.print("></td></tr>");
 		String password = atjeews.config.password != null ? SET_PASSWORD : "";
 
 		pw.print("<tr><td>Admin password</td><td><input type=\"password\" name=\"password\" value=\"");
@@ -96,11 +99,21 @@ public class Settings extends HttpServlet {
 		}
 		pw.print("<option value=\"0.0.0.0\">All interfaces</option>");
 		pw.print("</select></td></tr>");
+		pw.print("<tr><td colspan=\"2\">WebSocket &nbsp;&nbsp;<input type=\"checkbox\" name=\"websocket_enab\" value=\"true\"");
+		if (atjeews.config.websocket_enab)
+			pw.print(" checked");
+		pw.print("> &nbsp;&nbsp;&nbsp; No new app &nbsp;<input type=\"checkbox\" name=\"lock_app\" value=\"true\"");
+		if (atjeews.config.app_deploy_lock)
+			pw.print(" checked");
+		pw.print("></td</tr>");
 		// TODO add backlog
 		pw.print("<tr><td>Home dir</td><td><input type=\"text\" name=\"home_dir\" value=\"");
+		pw.print(System.getProperty(Config.APP_HOME, ""));
 		if (atjeews.config.useSD == false)
-			pw.print(System.getProperty(Config.APP_HOME, ""));
-		pw.print("\"></td></tr>");
+			pw.print("\" disabled" );
+		else
+			pw.print("\"");
+		pw.print("></td></tr>");
 		pw.print("<tr><td><input type=\"submit\" value=\"Save\" colspan=\"2\"></td></tr>");
 		pw.print("</table></form>");
 		pw.print("<div>Upload web application (.war) or keystore</div><form name=\"upload_form\" method=\"POST\" action=\"settings\" enctype=\"multipart/form-data\">");
@@ -121,6 +134,10 @@ public class Settings extends HttpServlet {
 			String fileName = (String) mpp.getParameter("app_file+"
 					+ MultipartParser.FILENAME);
 			message = "Nothing uploaded";
+			if (atjeews.config.app_deploy_lock) {
+				message = "Deploying new apps is not allowed";
+				fileName = null;
+			}
 			if (fileName != null) {
 				int sp = fileName.lastIndexOf('\\');
 				if (sp >= 0)
@@ -183,6 +200,8 @@ public class Settings extends HttpServlet {
 				System.setProperty(Config.APP_HOME, val);
 			} else
 				System.getProperties().remove(Config.APP_HOME);
+			atjeews.config.app_deploy_lock = Boolean.TRUE.toString().equals(req.getParameter("lock_app"));
+			atjeews.config.websocket_enab = Boolean.TRUE.toString().equals(req.getParameter("websocket_enab"));
 			atjeews.deployDir = null;
 			atjeews.initDeployDirectory();
 			atjeews.storeConfig();

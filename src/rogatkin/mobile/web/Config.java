@@ -26,10 +26,18 @@ public class Config {
 	static final String P_BINDADDR = "bind_addr";
 
 	static final String P_HOMEDIR = "home_dir";
+	
+	static final String P_APPLOCK = "applock";
+	
+	static final String P_WEBSOCKET = "websocket";
+	
+	static final String P_BACKLOG = "backlog";
 
 	public InetAddress iadr;
 	public int port;
 	public boolean ssl;
+	public boolean websocket_enab;
+	public boolean app_deploy_lock;
 	public boolean logEnabled;
 	public boolean virtualHost;
 	public boolean useSD = true;
@@ -44,8 +52,11 @@ public class Config {
 		SharedPreferences.Editor editor = prefs.edit();
 		editor.putBoolean("log_enable", logEnabled);
 		editor.putBoolean(P_SSL, ssl);
-		editor.putInt(P_PORT, port == 0?8080:port);
+		editor.putInt(P_PORT, port <= 0?8080:port);
+		editor.putInt(P_BACKLOG, backlog <= 0?60:backlog);
 		editor.putString(P_PASSWRD, password);
+		editor.putBoolean(P_APPLOCK, app_deploy_lock);
+		editor.putBoolean(P_WEBSOCKET, websocket_enab);
 		if (System.getProperty(APP_HOME) != null)
 			editor.putString(P_HOMEDIR, System.getProperty(APP_HOME));
 		else
@@ -67,9 +78,12 @@ public class Config {
 		SharedPreferences prefs = context.getSharedPreferences(Main.APP_NAME, Context.MODE_WORLD_READABLE);
 		port = prefs.getInt(P_PORT, 8080);
 		ssl = prefs.getBoolean(P_SSL, false);
+		backlog = prefs.getInt(P_BACKLOG, 60);
 		logEnabled = prefs.getBoolean("log_enable", false);
 		bindAddr = prefs.getString(P_BINDADDR, null);
 		virtualHost = prefs.getBoolean(P_VIRTUAL, false);
+		websocket_enab = prefs.getBoolean(P_WEBSOCKET, false);
+		app_deploy_lock = prefs.getBoolean(P_APPLOCK, false);
 		String home = prefs.getString(P_HOMEDIR, null);
 		if (home != null) {
 			System.setProperty(APP_HOME, home);

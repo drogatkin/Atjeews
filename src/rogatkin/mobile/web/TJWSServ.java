@@ -407,7 +407,7 @@ public class TJWSServ extends Service {
 		// SSL
 		if (config.ssl) {
 			srv.arguments.put(Acme.Serve.Serve.ARG_ACCEPTOR_CLASS,
-					"Acme.Serve.SSLAcceptor");
+					config.websocket_enab?"rogatkin.wskt.SSLSelectorAcceptor":"Acme.Serve.SSLAcceptor");
 			srv.arguments.put(Acme.Serve.SSLAcceptor.ARG_KEYSTOREFILE,
 					new File(getKeyDir(), KEYSTORE).getPath());
 			srv.arguments
@@ -418,7 +418,9 @@ public class TJWSServ extends Service {
 			srv.arguments.put(Acme.Serve.SSLAcceptor.ARG_KEYSTORETYPE, "BKS");
 			if (Main.DEBUG)
 				srv.log("SSL configured as:" + srv.arguments);
-		} else
+		} else if (config.websocket_enab)
+			srv.arguments.put(Acme.Serve.Serve.ARG_ACCEPTOR_CLASS, "Acme.Serve.SelectorAcceptor");
+		else
 			srv.arguments.remove(Acme.Serve.Serve.ARG_ACCEPTOR_CLASS);
 		srv.setAccessLogged(config.logEnabled);
 

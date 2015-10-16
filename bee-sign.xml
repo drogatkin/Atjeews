@@ -58,7 +58,7 @@
              <value>/META-INF/services</value>
          </operator>
      </expression>
-     <function name="rm">
+     <function name="mkd">
          <parameter variable="apk meta inf"/>
      </function>
      <expression name = "meta inf">
@@ -70,9 +70,15 @@
          <parameter variable="meta inf"/>
          <parameter variable="apk meta inf"/>
      </function>
+     <expression name = "unpacked apk">
+         <operator name="append">
+             <value variable="unpacked apk"/>
+             <value>/*</value>
+         </operator>
+     </expression>
      <function name="zip">
          <parameter variable="apk file"/>
-         <parameter variable="unpacked apk"/>
+         <parameter variable="unpacked apk" type="file"/>
      </function>
      <task exec="jarsigner.exe" path="&jdk_root;/bin">
           <parameter>-verbose</parameter>
@@ -103,7 +109,7 @@
      <function name="mv">
          <parameter variable="apk align"/>
          <parameter variable="apk file"/>
-     </function>
+     </function>  
      <echo>Done.</echo>
      </block>
      </target>

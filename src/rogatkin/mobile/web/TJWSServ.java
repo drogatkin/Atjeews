@@ -358,8 +358,7 @@ public class TJWSServ extends Service {
 						.getInetAddresses(); enumIpAddr.hasMoreElements();) {
 					InetAddress inetAddress = enumIpAddr.nextElement();
 					if (inetAddress.isLoopbackAddress()) {
-						if (inetAddress.isSiteLocalAddress() == false
-								&& InetAddressUtils.isIPv4Address(inetAddress
+						if (InetAddressUtils.isIPv4Address(inetAddress
 										.getHostAddress()))
 							return inetAddress;
 						result = inetAddress;
@@ -375,7 +374,7 @@ public class TJWSServ extends Service {
 		return result;
 	}
 
-	public static InetAddress getNonLookupAddress() {
+	public static InetAddress getNonLookupAddress(boolean any) {
 		InetAddress result = null;
 		try {
 			for (Enumeration<NetworkInterface> en = NetworkInterface
@@ -385,7 +384,7 @@ public class TJWSServ extends Service {
 						.getInetAddresses(); enumIpAddr.hasMoreElements();) {
 					InetAddress inetAddress = enumIpAddr.nextElement();
 					if (!inetAddress.isLoopbackAddress()) {
-						if (inetAddress.isSiteLocalAddress() == false
+						if ((inetAddress.isSiteLocalAddress() == false || any)
 								&& InetAddressUtils.isIPv4Address(inetAddress
 										.getHostAddress()))
 							return inetAddress;
@@ -446,19 +445,21 @@ public class TJWSServ extends Service {
 					return canonicalAddr;
 				} else {
 					srv.arguments.remove(Acme.Serve.Serve.ARG_BINDADDRESS);
-					iadr = getNonLookupAddress();
-					if (iadr != null)
+					iadr = getNonLookupAddress(false);
+					if (iadr != null && InetAddressUtils.isIPv4Address(iadr.getHostAddress()))
 						return iadr.getHostAddress();
+					//else
 				}
 			}
 		}
 		srv.arguments.remove(Acme.Serve.Serve.ARG_BINDADDRESS);
 		if (Main.DEBUG)
 			Log.e(SERVICE_NAME, "No address bound");
+		//return "127:0:0:1";
 		try {
 			return InetAddress.getLocalHost().getHostAddress();
 		} catch (UnknownHostException e) {
-			return "::";
+			return "127:0:0:1"; // "::"
 		}
 	}
 

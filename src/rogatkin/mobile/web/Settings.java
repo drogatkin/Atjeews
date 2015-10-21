@@ -92,12 +92,18 @@ public class Settings extends HttpServlet {
 				InetAddress inetAddress = enumIpAddr.nextElement();
 				pw.print("<option value=\"");
 				pw.print(inetAddress.getHostAddress());
-				pw.print("\">");
+				pw.print("\"");
+				if (inetAddress.getHostAddress().equals(atjeews.config.bindAddr))
+					pw.print(" selected");
+				pw.print(">");
 				pw.print(inetAddress.getHostName());
 				pw.print("</option>");
 			}
 		}
-		pw.print("<option value=\"0.0.0.0\">All interfaces</option>");
+		pw.print("<option value=\"0.0.0.0\"");
+		if("0.0.0.0".equals(atjeews.config.bindAddr))
+			pw.print(" selected");
+		pw.print(">All interfaces</option>");
 		pw.print("</select></td></tr>");
 		pw.print("<tr><td colspan=\"2\">WebSocket &nbsp;&nbsp;<input type=\"checkbox\" name=\"websocket_enab\" value=\"true\"");
 		if (atjeews.config.websocket_enab)

@@ -202,7 +202,7 @@ public class Settings extends HttpServlet {
 			atjeews.config.virtualHost = Boolean.TRUE.toString().equals(
 					req.getParameter("virt_host"));
 			val = req.getParameter("home_dir");
-			if (val.length() > 0) {
+			if (val != null && val.length() > 0) {
 				System.setProperty(Config.APP_HOME, val);
 			} else
 				System.getProperties().remove(Config.APP_HOME);

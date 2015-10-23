@@ -208,8 +208,6 @@ public class TJWSServ extends Service {
 				"%deploydir%/META-INF/jsp-classes");
 		// //////////
 		srv = new AndroidServ(properties, logStream, (Object) this);
-		updateRealm();
-		updateWWWServlet();
 		// add settings servlet
 		srv.addServlet("/settings", new Settings(this));
 		System.setProperty(WebAppServlet.WAR_NAME_AS_CONTEXTPATH, "yes");
@@ -217,8 +215,6 @@ public class TJWSServ extends Service {
 		System.setProperty(WebApp.DEF_WEBAPP_CLASSLOADER,
 				AndroidClassLoader.class.getName()); // "rogatkin.mobile.web.AndroidClassLoader"
 		initDeployDirectory();
-		srv.deployApps();
-		updateServletsList();
 	}
 
 	protected void initLogging() {
@@ -427,6 +423,7 @@ public class TJWSServ extends Service {
 		if (Main.DEBUG)
 			Log.d(SERVICE_NAME, "bind to " + config.bindAddr + ",use sd:"
 					+ config.useSD + ", deployed to:" + deployDir);
+		resetServ();
 		/*
 		 * if (config.bindAddr == null) {
 		 * srv.arguments.put(Acme.Serve.Serve.ARG_BINDADDRESS, "127:0:0:1");
@@ -461,6 +458,14 @@ public class TJWSServ extends Service {
 		} catch (UnknownHostException e) {
 			return "127:0:0:1"; // "::"
 		}
+	}
+	
+	void resetServ() {
+		updateRealm();
+		updateWWWServlet();
+		srv.addWebsocketProvider(WSProvider.class.toString());
+		srv.deployApps();
+		updateServletsList();
 	}
 
 	protected String deployAppFrom(String u) {
@@ -679,7 +684,7 @@ public class TJWSServ extends Service {
 			WebAppServlet.setRuntimeEnv(runtime); // provide servlet context
 													// Android environment
 													// access
-			addWebsocketProvider(WSProvider.class.toString());
+			//addWebsocketProvider(WSProvider.class.toString());
 		}
 		
 		@Override

@@ -113,8 +113,12 @@ public class TJWSServ extends Service {
 		}
 
 		public List<String> rescanApps() throws RemoteException {
+			try {
 			scanDeployments();
 			updateServletsList();
+			} catch(Exception e) {
+				srv.log(e, "");
+			}
 			return servletsList;
 		}
 
@@ -215,6 +219,7 @@ public class TJWSServ extends Service {
 		System.setProperty(WebApp.DEF_WEBAPP_CLASSLOADER,
 				AndroidClassLoader.class.getName()); // "rogatkin.mobile.web.AndroidClassLoader"
 		initDeployDirectory();
+		resetServ();
 	}
 
 	protected void initLogging() {

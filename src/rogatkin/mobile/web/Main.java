@@ -150,7 +150,11 @@ public class Main extends Activity {
 				RCServ servCtrl = ((TJWSApp) getApplication())
 						.getServiceControl();
 				try {
-					fillServlets(servCtrl.rescanApps());
+					if (servCtrl != null)
+						fillServlets(servCtrl.rescanApps());
+					else
+						reportProblem(new Exception(
+								"Can't obtain service control - null"));
 				} catch (Exception e) {
 					reportProblem(e);
 				} // TODO consider AsyncTask
@@ -221,7 +225,6 @@ public class Main extends Activity {
 		RCServ servCtrl = ((TJWSApp) getApplication()).getServiceControl();
 		if (servCtrl != null) {
 			updateStatus(servCtrl);
-			updateTitle();
 			try {
 				updateAppsList(servCtrl.getApps(), true);
 			} catch (RemoteException e) {
@@ -232,6 +235,7 @@ public class Main extends Activity {
 			// Exception());
 		} else if (DEBUG)
 			Log.d(APP_NAME, "service not started");
+		updateTitle();
 	}
 
 	private void updateStatus(RCServ servCtrl) {
@@ -447,7 +451,7 @@ public class Main extends Activity {
 		if (problem instanceof NullPointerException == false)
 			if (DEBUG)
 				Log.e(APP_NAME, "Unexpected problem:" + problem, problem);
-		//Toast.makeText(this, "" + problem, Toast.LENGTH_LONG).show();
+		Toast.makeText(this, "" + problem, Toast.LENGTH_LONG).show();
 	}
 
 }

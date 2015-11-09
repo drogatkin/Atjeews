@@ -29,6 +29,7 @@ import rogatkin.web.WebApp;
 import rogatkin.web.WebAppServlet;
 import Acme.Utils;
 import Acme.Serve.FileServlet;
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -113,12 +114,8 @@ public class TJWSServ extends Service {
 		}
 
 		public List<String> rescanApps() throws RemoteException {
-			try {
 			scanDeployments();
 			updateServletsList();
-			} catch(Exception e) {
-				srv.log(e, "");
-			}
 			return servletsList;
 		}
 
@@ -141,6 +138,7 @@ public class TJWSServ extends Service {
 
 	@Override
 	public void onDestroy() {
+		//srv.log("Destroy commande received");
 		stopServ(); // just in case
 		srv.destroyAllServlets();
 		if (logStream != System.out && logStream != null)
@@ -149,6 +147,7 @@ public class TJWSServ extends Service {
 	}
 
 	private void stopServ() {
+		//srv.log(new Exception("stop"), "stop");
 		if (status != ST_STOP)
 			srv.notifyStop();
 	}
@@ -165,7 +164,7 @@ public class TJWSServ extends Service {
 						wifiLock = wifiManager.createWifiLock(SERVICE_NAME);
 					}
 					try {
-						// wifiLock.acquire();
+						wifiLock.acquire();
 						code = srv.serve();
 						if (Main.DEBUG) {
 							Log.d(SERVICE_NAME, "Serve terminated with :"
@@ -222,7 +221,7 @@ public class TJWSServ extends Service {
 		resetServ();
 	}
 
-	protected void initLogging() {
+	@SuppressLint("NewApi") protected void initLogging() {
 		if (logStream != null)
 			return;
 		File logDir = new File(protectedFS ? getExternalCacheDir()
@@ -413,7 +412,7 @@ public class TJWSServ extends Service {
 			srv.arguments
 					.put(Acme.Serve.SSLAcceptor.ARG_KEYSTOREPASS,
 							config.password == null
-									|| config.password.isEmpty() ? "changeme"
+									|| "".equals(config.password) ? "changeme"
 									: config.password);
 			srv.arguments.put(Acme.Serve.SSLAcceptor.ARG_KEYSTORETYPE, "BKS");
 			if (Main.DEBUG)

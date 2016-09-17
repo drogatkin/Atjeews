@@ -467,7 +467,7 @@ public class TJWSServ extends Service {
 	void resetServ() {
 		updateRealm();
 		updateWWWServlet();
-		srv.addWebsocketProvider(WSProvider.class.toString());
+		srv.addWebsocketProvider(null);
 		srv.deployApps();
 		updateServletsList();
 	}
@@ -693,9 +693,12 @@ public class TJWSServ extends Service {
 		
 		@Override
 		protected void addWebsocketProvider(String provider) {
-			websocketProvider = new WSProvider();
-			websocketProvider.init(this);
-			websocketProvider.deploy(this, null);
+			if (config.websocket_enab) {
+				websocketProvider = new WSProvider();
+				websocketProvider.init(this);
+				websocketProvider.deploy(this, null);
+			} else
+				websocketProvider = null;
 		}
 
 		// Overriding method for public access

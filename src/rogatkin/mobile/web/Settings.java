@@ -233,6 +233,6 @@ public class Settings extends HttpServlet {
 	private void printFooter(PrintWriter pw) {
 		pw.print("<CENTER>");
 		pw.print(Serve.Identification.serverIdHtml);
-		pw.print("</CENTER></BODY></HTML>");
+		pw.print("&NBSP;&NBSP;<A HREF=\"http://drogatkin.github.io\">Privacy Policy</A></CENTER></BODY></HTML>");
 	}
 }

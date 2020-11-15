@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE bee PUBLIC "-//Dmitriy Rogatkin//DTD Bee Project Builder 1.0//EN"
     "https://raw.githubusercontent.com/drogatkin/7Bee/master/bee.dtd" [
-      <!ENTITY android_sdk "\tools\adt-bundle-windows-x86_64-20140702\sdk">
-      <!ENTITY jasper_lib "\projects\jasper7\build\jasper.jar">
-      <!ENTITY servlet_lib "\projects\servlet\javax.servlet.jar">
-      <!ENTITY tjws_wskt_lib "\projects\TJWS2\1.x\lib\wskt.jar">
-      <!ENTITY fast_scan_lib "\projects\fast-classpath-scanner\lib\class-scanner.jar">
-      <!ENTITY target "4.4W">
+      <!ENTITY android_sdk "/home/dmitriy/Android/Sdk">
+      <!ENTITY jasper_lib "/home/dmitriy/projects/jasper-7.0.75/build/jasper.jar">
+      <!ENTITY servlet_lib "maven:javax.servlet:javax.servlet-api:3.1.0">
+      <!ENTITY tjws_wskt_lib "/home/dmitriy/projects/TJWS2/1.x/lib/wskt.jar">
+      <!ENTITY fast_scan_lib "/home/dmitriy/projects/fast-classpath-scanner/lib/class-scanner.jar">
+      <!ENTITY target "30">
+      <!ENTITY build_ver "29.0.3">
 ]>
-<!-- Prepare war file for Android deployment Copyright 2015 (c) Dmitriy Rogatkin -->
+<!-- Prepare war file for Android deployment Copyright 2020 (c) Dmitriy Rogatkin -->
 <bee name="dexer" type="script">
-    <variable name="dx path">&android_sdk;/build-tools/android-&target;/lib/dx.jar</variable>
+    <variable name="dx path">&android_sdk;/build-tools/&build_ver;/lib/dx.jar</variable>
     <expression name="jre crop">
        <if>
          <expression>
@@ -43,7 +44,7 @@
             <value variable="JAVA_HOME"/>
             <value>/lib/tools.jar</value>
             <value name="path.separator" type="property"/>
-            <value>&android_sdk;/platforms/android-10/android.jar</value>
+            <value>&android_sdk;/platforms/android-&target;/android.jar</value>
         </operator>
     </expression>
     <variable name="source war"/>
@@ -90,7 +91,7 @@
             <expression name="unwar dir">
                 <operator name="append">
                     <value name="java.io.tmpdir" type="property"/>
-                    <value>war_temp</value>
+                    <value>/war_temp</value>
                 </operator>
             </expression>
             <if>
@@ -266,6 +267,7 @@
                </operator>
             </expression>
             <echo>Processing server endpoints</echo>
+            <echo variable="scanner path"/>
             <task name="scan" code="rogatkin.wskt.EndPointScanner" path="scanner path">
                 <parameter variable="web-inf"/>
                 <parameter variable="ws-info"/>

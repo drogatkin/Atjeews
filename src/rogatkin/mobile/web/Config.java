@@ -93,7 +93,7 @@ public class Config {
 			useSD = true;
 		}
 		rootApp = prefs.getString(P_ROOTAPP, null);
-		wwwFolder = prefs.getString(P_WEBROOT, "/");
+		wwwFolder = prefs.getString(P_WEBROOT, "/sdcard");
 		password = prefs.getString(P_PASSWRD, null);
 	}
 }

@@ -34,6 +34,9 @@ import android.widget.HeaderViewListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.os.Build;
+import android.content.pm.PackageManager;
+import android.Manifest;
 
 /**
  * Atjeews Android launcher of TJWS with administration support
@@ -374,7 +377,22 @@ public class Main extends Activity {
 		((CheckBox) findViewById(R.id.checkBox2)).setChecked(config.logEnabled);
 	}
 
+       boolean requestPermissions(String perm, int code) { // android.Manifest.permission.READ_EXTERNAL_STORAGE
+		if (Build.VERSION.SDK_INT > 23) {
+			if (checkSelfPermission(perm)
+					== PackageManager.PERMISSION_GRANTED) {
+				return true;
+			} else {
+				requestPermissions(new String[]{perm}, code);
+				return false;
+			}
+		} else { //permission is automatically granted on sdk<23 upon installation
+			return true;
+		}
+	}
+	
 	protected void fillServlets(List<String> newList) {
+	        requestPermissions(Manifest.permission.READ_EXTERNAL_STORAGE, 3);
 		updateAppsList(newList, true);
 	}
 

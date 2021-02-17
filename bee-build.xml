@@ -1,0 +1,458 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE bee PUBLIC "-//Dmitriy Rogatkin//DTD Bee Project Builder 1.0//EN"
+    "https://raw.githubusercontent.com/drogatkin/7Bee/master/bee.dtd" [
+      <!ENTITY android_sdk "/home/dmitriy/Android/Sdk">
+      <!ENTITY jdk_root "">
+      <!ENTITY tjws_src "/home/dmitriy/projects/TJWS2/1.x">
+      <!ENTITY jasper "/home/dmitriy/projects/jasper-7.0.75">
+      <!ENTITY keystore "android-publish.keystore">
+      <!ENTITY alias "app_release">
+      <!ENTITY target "30">
+      <!ENTITY build_tool "29.0.3">
+      <!ENTITY build_directory "build">
+]>
+<!-- Build Atjeews Copyright 2021 (c) Dmitriy Rogatkin -->
+<bee name="apk-packaging" type="script">
+     <expression name="apk tmp dir" >
+         <operator name="append" >
+             <value
+                 name="java.io.tmpdir"
+                 type="property" />
+             <value>/apk_temp</value>
+         </operator>
+     </expression>
+     <expression name="apk file">
+         <value>atjeews</value>
+     </expression>
+     <expression name="unpacked apk">
+         <operator name="append">
+             <value variable="apk tmp dir"/>
+             <value>/</value>
+             <function name="filename">
+                 <parameter variable="apk file"/>
+             </function>
+             <value>.apk</value>
+         </operator>
+     </expression>
+     <expression name="apk gen dir" >
+         <operator name="append" >
+             <value
+                 variable="apk tmp dir" />
+             <value>/gen</value>
+         </operator>
+     </expression>
+     <expression name="aapt">
+         <operator name="append">
+           <value>&android_sdk;/build-tools/&build_tool;/aapt</value>
+         </operator>
+     </expression>
+     <expression name="aidl">
+         <operator name="append">
+           <value>&android_sdk;/build-tools/&build_tool;/aidl</value>
+         </operator>
+     </expression>
+     <target name="remove_old">
+        <block>
+             <echo>Cleaning working folder</echo>
+                    <expression name="clean dir*">
+                        <operator name="append">
+                            <value variable="apk tmp dir"/>
+                            <value>/*/*/*/*/*/*/*/*/*/*/*/*/*/*</value>
+                        </operator>
+                    </expression>
+                    <if>
+                        <expression>
+                            <!--echo variable="clean dir*"/>
+                            <value>true</value-->
+                            <function name="rm">
+                                <parameter variable="clean dir*"/>
+                            </function>
+                        </expression>
+                        <else>
+                            <echo>Can not clean working directory, please do it manually and restart the script</echo>
+                            <echo variable="clean dir*"/>
+                            <interrupt/>
+                        </else>
+                    </if>  
+          </block>
+     </target>
+     <target name="create dirs">
+        <dependency target="remove_old"></dependency>
+        <block>
+           <function name="mkd">
+              <parameter variable="apk gen dir"/>
+            </function>
+        </block>      
+     </target>
+     <expression variable="src">
+      <operator name="append">
+         <value type="path">src</value>
+      </operator>
+     </expression>
+     <expression variable="src path">
+      <operator name="append">
+         <value type="path">src/rogatkin/.java</value>
+         <!--function name="cropname">
+            <parameter value="/rogatkin"/>
+            <parameter value="\."/>
+            <parameter value="/"/>
+            <parameter value="a"/>
+         </function-->
+      </operator>
+     </expression>
+     <expression variable="idl file">
+        <operator name="append">
+        </operator>
+     </expression>
+     <variable name="empty str">
+</variable>
+     <target name="idl gen">
+         <dependency target="create dirs"></dependency>
+         <task exec="aidl" stdin="empty str">
+            <parameter>-I</parameter>
+            <parameter variable="src"/>
+            <parameter>-o</parameter>
+             <parameter variable="apk gen dir"/>
+            <parameter>src/rogatkin/mobile/web/RCServ.aidl</parameter>
+         </task>
+     </target>
+     <target name="pack_res">
+        <dependency target="idl gen"></dependency>
+         <task exec="aapt">
+            <parameter>package</parameter>
+            <parameter>-f</parameter>
+            <parameter>-m</parameter>
+            <parameter>-J</parameter>
+             <parameter variable="apk gen dir"/>
+             <parameter>-M</parameter>
+             <parameter>AndroidManifest.xml</parameter>
+             <parameter>-S</parameter>
+             <parameter>res</parameter>
+             <parameter>-I</parameter>
+             <parameter>&android_sdk;/platforms/android-&target;/android.jar</parameter>
+         </task>
+     </target>
+   <target name="check build" dir="PROJECT_HOME">
+     <dependency>
+        <expression>
+          <operator name="eq">
+            <function name ="timestamp">
+               <parameter value="&build_directory;"/>
+            </function>
+            <value></value>
+          </operator>
+        </expression>
+     </dependency>
+     <block>
+       <function name="mkd">
+         <parameter value="&build_directory;"/>
+       </function>
+     </block>
+  </target>
+  <expression variable="PATH SEPARATOR">
+      <value name="path.separator" type="property"/>
+  </expression>
+      <variable name="PROJECT_HOME" type="path">.</variable>
+     <echo variable="src path"/>
+     <expression variable="java sources">
+        <function name="newerwithdependency">
+           <parameter variable="src path"/>
+           <parameter value="&build_directory;/rogatkin/.class"/>
+	   <parameter/>
+	   <parameter value="rogatkin"/>
+        </function>
+     </expression>
+     
+     <echo>/&build_directory;/rogatkin/.class</echo>
+     <expression variable="R file">
+        <operator name="append">
+           <value variable="apk gen dir"/>
+           <value>/rogatkin/mobile/web/R.java</value>
+        </operator>
+     </expression>
+     <expression variable="IDL java file">
+        <operator name="append">
+           <value variable="apk gen dir"/>
+           <value>/rogatkin/mobile/web/RCServ.java</value>
+        </operator>
+     </expression>
+     <expression variable="java sources">
+        <operator name="array">
+           <value variable="java sources"/>
+           <value variable="R file"/>
+           <value variable="IDL java file"/>
+        </operator>
+     </expression>
+      <echo variable="java sources"/>
+      <variable name="JAVA_HOME"/>
+  <expression variable="JAVA_HOME">
+     <if>
+       <expression>
+         <operator name="eq">
+            <value>/</value>
+            <value name="file.separator" type="property"/>
+         </operator>
+       </expression>
+       <block type="then">
+         <function name="scalar">
+            <parameter>
+               <function name="cropname">
+                  <parameter name="java.home" type="property"/>
+                  <parameter>/jre</parameter>
+               </function> 
+             </parameter>
+          </function>
+       </block>
+       <block type="else">
+         <value name="java.home" type="property"/>
+       </block>
+     </if>
+  </expression> 
+  <expression variable="JAVA_HOME">
+     <function name="cropname">
+        <parameter variable="JAVA_HOME"/>
+        <parameter>\\jre</parameter>
+     </function>
+  </expression> 
+  <expression variable="javac">
+     <operator name="append">
+        <value variable="JAVA_HOME"/>
+        <value>/bin/javac</value>
+     </operator>
+  </expression>
+   <expression variable="CUSTOM CP">
+    <operator name="append">
+       <value>&tjws_src;/lib/webserver.jar</value>
+       <value variable="PATH SEPARATOR"/>
+       <value>&tjws_src;/lib/war.jar</value>
+       <value variable="PATH SEPARATOR"/>
+       <value>&tjws_src;/lib/wskt.jar</value>
+       <!--value variable="PATH SEPARATOR"/>
+       <value  type="repo_artifact">maven:javax.servlet:javax.servlet-api:3.1.0</value-->
+       <value variable="PATH SEPARATOR"/>
+       <value type="repo_artifact">maven:javax.websocket:javax.websocket-api:1.1</value>
+       <value variable="PATH SEPARATOR"/>
+       <value>&jasper;/build/jasper.jar</value>
+    </operator>
+  </expression>
+
+  <expression variable="class path">
+     <operator name="append">
+        <!--value>&android_sdk;/platforms/android-&target;/android.jar</value>
+        <value variable="PATH SEPARATOR"/-->
+        <value variable="PROJECT_HOME"/>
+        <value>/&build_directory;</value>
+        <value variable="PATH SEPARATOR"/>
+        <value variable="CUSTOM CP"/>
+     </operator>
+  </expression>
+  
+  <variable name="comp target">1.7</variable>
+  
+  <target name="compile" dir="PROJECT_HOME">
+    <dependency target="check build"/>
+    <dependency variable="java sources"/>
+    <dependency target="pack_res"/>
+    <echo>Compiling...</echo>
+    <echo variable="class path"/>
+    <echo variable="java sources"/>
+    <task exec="javac">
+       <parameter value="-Xbootclasspath:&android_sdk;/platforms/android-&target;/android.jar"/>
+       <!--parameter value="&android_sdk;/platforms/android-&target;/android.jar"/-->
+       <parameter value="-classpath"/>
+       <parameter variable="class path"/>
+       <parameter value="-source"/>
+       <parameter variable="comp target"/>
+       <parameter value="-target"/>
+       <parameter variable="comp target"/>
+       <parameter value="-d"/>
+       <parameter value="&build_directory;" type="dir"/>
+       <parameter variable="java sources"/>
+      <onexit>
+        <if>
+          <expression>
+             <operator name="neq"><value variable="resultcode"/><value>0</value></operator>
+          </expression>
+          <block type="then">
+                 <echo>Error(s) at compilation</echo>
+                 <function name="stop">
+			<parameter value="1"/>
+                 </function>
+          </block>
+       </if>
+      </onexit>
+      <onexception>
+	<block>
+                 <echo>Exception at compilation</echo>
+                 <echo variable="~#error#~"/>
+                 <function name="stop">
+			<parameter value="-1"/>
+                 </function>
+	</block>
+      </onexception>
+    </task>
+  </target> 
+  <target name="jar">
+    <echo>Jarring...</echo>
+    <dependency target="compile"/>
+    <task name="jar_do" code="sun.tools.jar.Main">
+       <parameter>-cf</parameter>
+       <parameter value="&build_directory;/atjeews" type="file"/>
+       <parameter value="-C"/>
+       <parameter value="&build_directory;" type="dir"/>
+       <parameter value="rogatkin" type="dir"/>
+      <onexception>
+	<block>
+                 <echo>Exception at jarring</echo>
+                 <function name="stop">
+			<parameter value="-1"/>
+                 </function>
+	</block>
+      </onexception>
+    </task>
+  </target>
+  <expression name="dex lib">
+     <operator name="append">
+         <value variable="apk tmp dir"/>
+         <value>/</value>
+         <value>classes.dex</value>
+     </operator>
+  </expression>
+  <variable name="jar names"/>
+  <expression name="jar names">
+      <for variable="app archive" in="class path" separator="PATH SEPARATOR">
+         <expression name="jar names">              
+         <operator name="array">
+            <value variable="jar names"/>
+            <value variable="app archive"/>
+         </operator>
+         </expression>
+     </for>
+  </expression>       
+  <!--expression name="jar names">
+     <function name="cropname">
+        <parameter variable="class path"/>
+        <parameter variable="PATH SEPARATOR"/>
+        <parameter> </parameter>
+        <parameter>true</parameter>
+     </function>
+  </expression-->
+  <variable name="dx path">&android_sdk;/build-tools/&build_tool;/lib/dx.jar</variable>
+  <target name="dex">
+   <dependency target="jar"/>
+   <echo variable="jar names"/>
+      <task name="dex_do" code="com.android.dx.command.Main" path="dx path"> <!-- without dex com.android.dx.command.dexer.Main  -->
+                            <parameter>--dex</parameter>
+                            <parameter>
+                                <operator name="append">
+                                    <value>--output=</value>
+                                    <value variable="dex lib"/>
+                                </operator>
+                            </parameter>
+                            <parameter variable="jar names"/>
+                            <!--parameter>/home/dmitriy/projects/TJWS2/1.x/lib/webserver.jar</parameter>
+                            <parameter>/home/dmitriy/projects/TJWS2/1.x/lib/wskt.jar</parameter-->
+      </task> 
+  </target> 
+  <target name="rest_aapt">
+   <dependency target="dex"/>
+      <task exec="aapt">
+            <parameter>package</parameter>
+            <parameter>-f</parameter>
+            <parameter>-M</parameter> 
+            <parameter>AndroidManifest.xml</parameter>
+            <parameter>-S</parameter> 
+            <parameter>res</parameter> 
+            <parameter>-I</parameter> 
+            <parameter>&android_sdk;/platforms/android-&target;/android.jar</parameter> 
+            <parameter>-F</parameter> 
+            <parameter>Atjeews.apk.unaligned</parameter>
+      </task>
+      <task exec="aapt">
+          <parameter>add</parameter> 
+           <parameter>-k</parameter>
+          <parameter>Atjeews.apk.unaligned</parameter> 
+          <parameter variable="dex lib"></parameter>
+      </task>
+  </target>  
+     <target name="doit" dir=".">
+      <dependency target="rest aapt"/>
+     <block>
+     <function name="mkd">
+         <parameter variable="unpacked apk"/>
+     </function>
+     <expression name="unpacked apk wc">
+         <operator name="append">
+             <value variable="unpacked apk"></value>
+             <value>/*/*/*/*/*/*/*/*/*/*/*/*/*/*</value>
+         </operator>
+     </expression>
+     <function name="rm">
+         <parameter variable="unpacked apk wc"/>
+     </function>
+     <function name="unzip">
+         <parameter variable="apk file"/>
+         <parameter variable="unpacked apk"/>
+     </function>
+     <expression name = "apk meta inf">
+         <operator name="append">
+             <value variable="unpacked apk"/>
+             <value>/META-INF/services</value>
+         </operator>
+     </expression>
+     <function name="mkd">
+         <parameter variable="apk meta inf"/>
+     </function>
+     <expression name = "meta inf">
+         <operator name="append">
+             <value>&tjws_src;/resources/META-INF/services/javax.websocket.server.ServerEndpointConfig$Configurator</value>
+         </operator>
+     </expression>
+     <function name="cp">
+         <parameter variable="meta inf"/>
+         <parameter variable="apk meta inf"/>
+     </function>
+     <expression name = "unpacked apk">
+         <operator name="append">
+             <value variable="unpacked apk"/>
+             <value>/*</value>
+         </operator>
+     </expression>
+     <function name="zip">
+         <parameter variable="apk file"/>
+         <parameter variable="unpacked apk" type="file"/>
+     </function>
+     <task exec="jarsigner" path="&jdk_root;/bin">
+          <parameter>-verbose</parameter>
+          <parameter>-sigalg</parameter>
+          <parameter>SHA1withRSA</parameter>
+          <parameter>-digestalg</parameter>
+          <parameter>SHA1</parameter>
+          <parameter>-keystore</parameter>
+          <parameter>&keystore;</parameter>
+          <parameter variable="apk file"/>
+          <parameter>&alias;</parameter>
+     </task>
+     <expression name = "apk align">
+         <operator name="append">
+             <value variable="apk file"/>
+             <value>.align</value>
+         </operator>
+     </expression>
+     <task exec="&android_sdk;\build-tools\&build_tool;/zipalign" path="&android_sdk;\build-tools\&build_tool;">
+          <parameter>-v</parameter>
+          <parameter>4</parameter>
+          <parameter variable="apk file"/>
+          <parameter variable="apk align"/>  
+      </task>
+      <function name="rm">
+         <parameter variable="apk file"/>
+      </function>
+     <function name="mv">
+         <parameter variable="apk align"/>
+         <parameter variable="apk file"/>
+     </function>  
+     <echo>Done.</echo>
+     </block>
+     </target>
+</bee>

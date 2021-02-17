@@ -22,8 +22,6 @@ import java.util.Properties;
 
 import javax.servlet.Servlet;
 
-import org.apache.http.conn.util.InetAddressUtils;
-
 import rogatkin.web.WarRoller;
 import rogatkin.web.WebApp;
 import rogatkin.web.WebAppServlet;
@@ -311,6 +309,9 @@ public class TJWSServ extends Service {
 			}
 		}
 	}
+	
+	
+
 
 	protected void updateRealm() {
 		Acme.Serve.Serve.PathTreeDictionary realms = new Acme.Serve.Serve.PathTreeDictionary();
@@ -358,7 +359,7 @@ public class TJWSServ extends Service {
 						.getInetAddresses(); enumIpAddr.hasMoreElements();) {
 					InetAddress inetAddress = enumIpAddr.nextElement();
 					if (inetAddress.isLoopbackAddress()) {
-						if (InetAddressUtils.isIPv4Address(inetAddress
+						if (isIPv4Address(inetAddress
 										.getHostAddress()))
 							return inetAddress;
 						result = inetAddress;
@@ -385,7 +386,7 @@ public class TJWSServ extends Service {
 					InetAddress inetAddress = enumIpAddr.nextElement();
 					if (!inetAddress.isLoopbackAddress()) {
 						if ((inetAddress.isSiteLocalAddress() == false || any)
-								&& InetAddressUtils.isIPv4Address(inetAddress
+								&& isIPv4Address(inetAddress
 										.getHostAddress()))
 							return inetAddress;
 						result = inetAddress;
@@ -397,6 +398,10 @@ public class TJWSServ extends Service {
 				Log.e(SERVICE_NAME, ex.toString());
 		}
 		return result;
+	}
+	
+	public static boolean isIPv4Address(String hostAddr) {
+	   return hostAddr.indexOf(':')<0;
 	}
 
 	String updateNetworkSettings() {
@@ -447,7 +452,7 @@ public class TJWSServ extends Service {
 				} else {
 					srv.arguments.remove(Acme.Serve.Serve.ARG_BINDADDRESS);
 					iadr = getNonLookupAddress(false);
-					if (iadr != null && InetAddressUtils.isIPv4Address(iadr.getHostAddress()))
+					if (iadr != null && isIPv4Address(iadr.getHostAddress()))
 						return iadr.getHostAddress();
 					//else
 				}

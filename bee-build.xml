@@ -5,7 +5,7 @@
       <!ENTITY jdk_root "">
       <!ENTITY tjws_src "/home/dmitriy/projects/TJWS2/1.x">
       <!ENTITY jasper "/home/dmitriy/projects/jasper-7.0.75">
-      <!ENTITY keystore "android-publish.keystore">
+      <!ENTITY keystore "/home/dmitriy/Documents/android-publish.keystore">
       <!ENTITY alias "app_release">
       <!ENTITY target "30">
       <!ENTITY build_tool "29.0.3">
@@ -313,7 +313,7 @@
   </target>
   <expression name="dex lib">
      <operator name="append">
-         <value variable="apk tmp dir"/>
+         <value variable="apk tmp dir"/>git
          <value>/</value>
          <value>classes.dex</value>
      </operator>
@@ -375,8 +375,8 @@
           <parameter variable="dex lib"></parameter>
       </task>
   </target>  
-     <target name="doit" dir=".">
-      <dependency target="rest aapt"/>
+     <target name="extract_non_java" dir=".">
+      <dependency target="rest_aapt"/>
      <block>
      <function name="mkd">
          <parameter variable="unpacked apk"/>
@@ -387,40 +387,32 @@
              <value>/*/*/*/*/*/*/*/*/*/*/*/*/*/*</value>
          </operator>
      </expression>
-     <function name="rm">
+     <!--function name="rm">
          <parameter variable="unpacked apk wc"/>
-     </function>
-     <function name="unzip">
-         <parameter variable="apk file"/>
-         <parameter variable="unpacked apk"/>
-     </function>
-     <expression name = "apk meta inf">
-         <operator name="append">
-             <value variable="unpacked apk"/>
-             <value>/META-INF/services</value>
-         </operator>
-     </expression>
-     <function name="mkd">
-         <parameter variable="apk meta inf"/>
-     </function>
-     <expression name = "meta inf">
-         <operator name="append">
-             <value>&tjws_src;/resources/META-INF/services/javax.websocket.server.ServerEndpointConfig$Configurator</value>
-         </operator>
-     </expression>
-     <function name="cp">
-         <parameter variable="meta inf"/>
-         <parameter variable="apk meta inf"/>
-     </function>
-     <expression name = "unpacked apk">
+     </function-->
+     <for variable="apk file" in="class path" separator="PATH SEPARATOR">
+        <block>
+        <echo variable="apk file"/>
+        <function name="unzip">
+            <parameter variable="apk file"/>
+            <parameter variable="unpacked apk"/>
+            <parameter>./*.properties</parameter>
+            <parameter>./*.dtd</parameter>
+            <parameter>./*.xsd</parameter>
+            <parameter>./*.MF</parameter>
+            <parameter>./*Configurator</parameter> <!-- /resources/META-INF/services/javax.websocket.server.ServerEndpointConfig$Configurator -->
+        </function> 
+        </block>
+     </for>
+     <expression name="unpacked apk dirs">
          <operator name="append">
              <value variable="unpacked apk"/>
              <value>/*</value>
          </operator>
      </expression>
-     <function name="zip">
-         <parameter variable="apk file"/>
-         <parameter variable="unpacked apk" type="file"/>
+      <function name="zip">
+         <parameter value="Atjeews.apk.unaligned"/>
+         <parameter variable="unpacked apk dirs" type="file"/>
      </function>
      <task exec="jarsigner" path="&jdk_root;/bin">
           <parameter>-verbose</parameter>
@@ -430,7 +422,7 @@
           <parameter>SHA1</parameter>
           <parameter>-keystore</parameter>
           <parameter>&keystore;</parameter>
-          <parameter variable="apk file"/>
+          <parameter value="Atjeews.apk.unaligned"/>
           <parameter>&alias;</parameter>
      </task>
      <expression name = "apk align">
@@ -439,19 +431,26 @@
              <value>.align</value>
          </operator>
      </expression>
-     <task exec="&android_sdk;\build-tools\&build_tool;/zipalign" path="&android_sdk;\build-tools\&build_tool;">
+     <task exec="&android_sdk;/build-tools/&build_tool;/zipalign" path="&android_sdk;/build-tools/&build_tool;">
           <parameter>-v</parameter>
           <parameter>4</parameter>
-          <parameter variable="apk file"/>
+          <parameter variable="Atjeews.apk.unaligned"/>
           <parameter variable="apk align"/>  
       </task>
       <function name="rm">
-         <parameter variable="apk file"/>
+         <parameter variable="Atjeews.apk.unaligned"/>
+
       </function>
+      <expression name="apk file">
+         <operator name="append">
+             <value variable="apk file"/>
+             <value>.apk</value>
+          </operator>
+     </expression>
      <function name="mv">
          <parameter variable="apk align"/>
          <parameter variable="apk file"/>
-     </function>  
+     </function> 
      <echo>Done.</echo>
      </block>
      </target>

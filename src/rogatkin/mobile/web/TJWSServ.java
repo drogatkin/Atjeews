@@ -37,6 +37,11 @@ import android.os.Environment;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
+import android.app.Notification;
+import android.os.Build;
+import android.graphics.Color;
+import android.app.NotificationManager;
+import android.app.NotificationChannel ;
 
 /**
  * Android TJWS server service
@@ -133,6 +138,14 @@ public class TJWSServ extends Service {
 			return (List<String>) doAppOper(OperCode.deploy, name);
 		}
 	};
+	
+	@Override
+        public void onCreate() {
+            super.onCreate();
+            if (Build.VERSION.SDK_INT > 25) {
+                startForegroundNew();
+            }
+        }
 
 	@Override
 	public void onDestroy() {
@@ -143,6 +156,28 @@ public class TJWSServ extends Service {
 			logStream.close();
 		super.onDestroy();
 	}
+	
+	private void startForegroundNew() {
+           String NOTIFICATION_CHANNEL_ID = "rogatkin.mobile.web.Atjeews";
+           String channelName = "Atjeews Service";     
+             
+           NotificationChannel chan = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_NONE);
+           
+           chan.setLightColor(Color.YELLOW);
+           chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+           NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+           assert manager != null;
+           manager.createNotificationChannel(chan);
+
+           Notification.Builder notificationBuilder = new Notification.Builder(this, NOTIFICATION_CHANNEL_ID);
+           Notification notification = notificationBuilder.setOngoing(true)
+            //.setSmallIcon(R.drawable.icon_1)
+            .setContentTitle("Atjeews server")
+            .setPriority(NotificationManager.IMPORTANCE_MIN)
+            .setCategory(Notification.CATEGORY_SERVICE)
+            .build();
+            startForeground(2, notification);
+       }
 
 	private void stopServ() {
 		//srv.log(new Exception("stop"), "stop");

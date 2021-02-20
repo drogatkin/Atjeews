@@ -75,7 +75,7 @@ public class Config {
 	}
 	
 	protected void load(Context context) {
-		SharedPreferences prefs = context.getSharedPreferences(Main.APP_NAME, Context.MODE_WORLD_READABLE);
+		SharedPreferences prefs = context.getSharedPreferences(Main.APP_NAME, Context.MODE_PRIVATE);
 		port = prefs.getInt(P_PORT, 8080);
 		ssl = prefs.getBoolean(P_SSL, false);
 		backlog = prefs.getInt(P_BACKLOG, 60);

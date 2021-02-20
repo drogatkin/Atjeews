@@ -153,7 +153,6 @@
       <value name="path.separator" type="property"/>
   </expression>
       <variable name="PROJECT_HOME" type="path">.</variable>
-     <echo variable="src path"/>
      <expression variable="java sources">
         <function name="newerwithdependency">
            <parameter variable="src path"/>
@@ -163,7 +162,6 @@
         </function>
      </expression>
      
-     <echo>/&build_directory;/rogatkin/.class</echo>
      <expression variable="R file">
         <operator name="append">
            <value variable="apk gen dir"/>
@@ -183,10 +181,9 @@
            <value variable="IDL java file"/>
         </operator>
      </expression>
-      <echo variable="java sources"/>
       <variable name="JAVA_HOME"/>
-  <expression variable="JAVA_HOME">
-     <if>
+      <expression variable="JAVA_HOME">
+      <if>
        <expression>
          <operator name="eq">
             <value>/</value>
@@ -253,9 +250,6 @@
     <dependency target="check build"/>
     <dependency variable="java sources"/>
     <dependency target="pack_res"/>
-    <echo>Compiling...</echo>
-    <echo variable="class path"/>
-    <echo variable="java sources"/>
     <task exec="javac">
        <parameter value="-Xbootclasspath:&android_sdk;/platforms/android-&target;/android.jar"/>
        <!--parameter value="&android_sdk;/platforms/android-&target;/android.jar"/-->
@@ -339,8 +333,7 @@
   </expression-->
   <variable name="dx path">&android_sdk;/build-tools/&build_tool;/lib/dx.jar</variable>
   <target name="dex">
-   <dependency target="jar"/>
-   <echo variable="jar names"/>
+     <dependency target="jar"/>
       <task name="dex_do" code="com.android.dx.command.Main" path="dx path"> <!-- without dex com.android.dx.command.dexer.Main  -->
                             <parameter>--dex</parameter>
                             <parameter>
@@ -392,7 +385,6 @@
      </function-->
      <for variable="apk file" in="class path" separator="PATH SEPARATOR">
         <block>
-        <echo variable="apk file"/>
         <function name="unzip">
             <parameter variable="apk file"/>
             <parameter variable="unpacked apk"/>

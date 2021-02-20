@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.util.Log;
+import android.os.Build;
 import java.lang.Thread.UncaughtExceptionHandler;
 
 public class TJWSApp extends Application {
@@ -42,6 +43,9 @@ public class TJWSApp extends Application {
 			return;
 		Intent serv = new Intent(this, TJWSServ.class);
 		if (!isMyServiceRunning(TJWSServ.class))
+		   if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                      startForegroundService(serv);
+                  } else
 			startService(serv);
 		bindService(serv, new ServiceConnection() {
 

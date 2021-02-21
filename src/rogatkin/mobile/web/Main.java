@@ -392,7 +392,7 @@ public class Main extends Activity {
 	}
 	
 	protected void fillServlets(List<String> newList) {
-	        requestPermissions(Manifest.permission.READ_EXTERNAL_STORAGE, 3);
+	        requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, 3);
 		updateAppsList(newList, true);
 	}
 

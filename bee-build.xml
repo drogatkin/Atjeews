@@ -174,6 +174,7 @@
            <value>/rogatkin/mobile/web/RCServ.java</value>
         </operator>
      </expression>
+    <!-- TODO simply add content of directory gen --> 
      <expression variable="java sources">
         <operator name="array">
            <value variable="java sources"/>
@@ -368,7 +369,7 @@
           <parameter variable="dex lib"></parameter>
       </task>
   </target>  
-     <target name="extract_non_java" dir=".">
+     <target name="complete" dir=".">
       <dependency target="rest_aapt"/>
      <block>
      <function name="mkd">

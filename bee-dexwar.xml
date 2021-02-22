@@ -9,7 +9,7 @@
       <!ENTITY target "30">
       <!ENTITY build_ver "29.0.3">
 ]>
-<!-- Prepare war file for Android deployment Copyright 2020 (c) Dmitriy Rogatkin -->
+<!-- Prepare a war file for Android deployment, Copyright 2021 (c) Dmitriy Rogatkin -->
 <bee name="dexer" type="script">
     <variable name="dx path">&android_sdk;/build-tools/&build_ver;/lib/dx.jar</variable>
     <expression name="jre crop">

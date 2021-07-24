@@ -1,5 +1,7 @@
 package rogatkin.mobile.web;
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -13,7 +15,9 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
 public class MultipartParser {
-	public static final String MULTIPARTDATA = "multipart/form-data";
+	public static final String APP_NAME = Main.APP_NAME + ".MultipartParser";
+
+//	public static final String MULTIPARTDATA = "multipart/form-data";
 
 	public static final String BOUNDARY_EQ = "boundary=";
 
@@ -44,11 +48,9 @@ public class MultipartParser {
 		int bp = contentType.indexOf(BOUNDARY_EQ);
 		if (bp < 0)
 			return;
-		String boundary = contentType.substring(bp + BOUNDARY_EQ.length()); // it
-		// can be not last attribute
+		String boundary = contentType.substring(bp + BOUNDARY_EQ.length()); // it can be not last attribute
 		int boundaryLength = boundary.length();
-		int contentLength = req.getContentLength(); // TODO can be -1, it is
-													// normal
+		int contentLength = req.getContentLength(); // TODO can be -1, it is normal
 		if (contentLength <= 0)
 			return;
 		int maxReqLength = 30 * 1024 * 1024;
@@ -93,7 +95,7 @@ public class MultipartParser {
 					StringTokenizer ast = new StringTokenizer(s, ";");
 					if (ast.hasMoreTokens()) {
 						token = ast.nextToken();
-						if (token.indexOf(FORM_DATA) < 0)
+						if (!token.contains(FORM_DATA))
 							break main_loop; // throw new IOException( ..
 
 						while (ast.hasMoreTokens()) {
@@ -104,6 +106,7 @@ public class MultipartParser {
 								if (ep < 0 || filename != null)
 									break main_loop;
 								filename = token.substring(dp + FILENAME_EQ_QT.length(), ep);
+								Log.i(APP_NAME,"Part filename: "+filename);
 								continue;
 							}
 							dp = token.indexOf(NAME_EQ_QT);
@@ -113,6 +116,7 @@ public class MultipartParser {
 									break main_loop; // throw new
 								// IOException( ..
 								name = token.substring(dp + NAME_EQ_QT.length(), ep);
+								Log.i(APP_NAME,"Part name: "+name);
 								continue;
 							}
 						}
@@ -120,7 +124,9 @@ public class MultipartParser {
 					if (filename != null)
 						addPart(name + '+' + FILENAME, filename);
 				} else if (CONTENT_TYPE.equalsIgnoreCase(header)) {
-					partContentType = s;
+					if (s.length() > 0)
+						partContentType = s;
+					Log.i(APP_NAME,"Part content-type: "+partContentType);
 				}
 				ec = sis.readLine(buffer, contentRead, contentLength - contentRead);
 				if (ec < 0)
@@ -131,20 +137,32 @@ public class MultipartParser {
 				}
 				s = new String(buffer, contentRead, ec, "UTF-8");
 			} while (true);
+			if ( (partContentType == null || partContentType.startsWith("text/")) &&
+				 ((filename == null && name != null && name.equals("configurator")) ||
+				  (name == null && filename != null && filename.equals("configurator.html"))) )
+			{	name = "configurator";
+				filename = "configurator.html";
+			}
+			// end of disposition
 			if (name == null)
 				break main_loop; // throw new IOException( ..
 			int marker = contentRead;
 			if (partContentType == null || partContentType.indexOf("text/") >= 0
 					|| partContentType.indexOf("application/") >= 0 || partContentType.indexOf("message/") >= 0
-					|| partContentType.indexOf("unknown") >= 0) { // read
-				// everything
+					|| partContentType.indexOf("unknown") >= 0) { // read everything
 				do {
 					ec = sis.readLine(buffer, contentRead, contentLength - contentRead);
 					if (ec < 0)
 						break main_loop;
 					s = new String(buffer, contentRead, ec, "UTF-8");
 					p = s.indexOf(boundary);
-					if (p >= 0) { // we met a boundry
+					boolean noExtnoUrlFilename = filename == null || (filename.indexOf(':') < 0 && filename.lastIndexOf('.') <= filename.lastIndexOf('/'));
+					if (contentRead - marker == 2 && buffer[contentRead-2] == 0x0D && buffer[contentRead-1] == 0x0A && p == 2 &&
+							noExtnoUrlFilename && s.regionMatches(p + boundaryLength, BOUNDARY_END_SFX, 0, BOUNDARY_END_SFX.length())) {
+						// empty file with filename without extension and without ':' , i.e. not a URL
+						addPart(name, new byte[0]);
+						break main_loop;
+					} else if (p >= 0) { // we met a boundry
 						// finish current part
 						if (contentRead - marker <= 2) {
 							// no file content in the stream, probably it's a
@@ -153,6 +171,7 @@ public class MultipartParser {
 								URLConnection uc = new URL(filename).openConnection();
 								if (uc.getContentType().indexOf("image/") >= 0) { // support
 									int cl = uc.getContentLength();
+									int sizeLimit = filename.endsWith("/favicon.ico") ? 16 * 1024 :	cl;	// 16K for favicon
 									if (cl > 0 && cl < maxReqLength) {
 										InputStream uis = uc.getInputStream();
 										if (uis != null) {
@@ -166,7 +185,8 @@ public class MultipartParser {
 												cl += rc;
 											} while (rc > 0);
 											uis.close();
-											addPart(name, im);
+											if (cl <= sizeLimit)
+												addPart(name, im);
 										}
 									} else { // length unknown but we can try
 										InputStream uis = uc.getInputStream();
@@ -186,20 +206,19 @@ public class MultipartParser {
 											} finally {
 												uis.close();
 											}
-											addPart(name, im);
+											if (sizeLimit < 0 || im.length <= sizeLimit)
+												addPart(name, im);
 										}
 									}
 								}
 							} catch (MalformedURLException mfe) {
 							}
+						} else if (partContentType != null && partContentType.indexOf("application/") >= 0) {
+							byte[] im = new byte[contentRead - marker - 2];
+							System.arraycopy(buffer, marker, im, 0, contentRead - marker - 2/* crlf */);
+							addPart(name, im);
 						} else {
-							if (partContentType != null && partContentType.indexOf("application/") >= 0) {
-								byte[] im = new byte[contentRead - marker - 2];
-								System.arraycopy(buffer, marker, im, 0, contentRead - marker - 2/* crlf */);
-								addPart(name, im);
-							} else {
-								addPart(name, new String(buffer, marker, contentRead - marker - 2/* crlf */, "UTF-8"));
-							}
+							addPart(name, new String(buffer, marker, contentRead - marker - 2/* crlf */, "UTF-8"));
 						}
 						if (s.regionMatches(p + boundaryLength, BOUNDARY_END_SFX, 0, BOUNDARY_END_SFX.length()))
 							break main_loop; // it shouldn't happen here, but

@@ -158,26 +158,29 @@ public class TJWSServ extends Service {
 	}
 	
 	private void startForegroundNew() {
-           String NOTIFICATION_CHANNEL_ID = "rogatkin.mobile.web.Atjeews";
-           String channelName = "Atjeews Service";     
-             
-           NotificationChannel chan = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_NONE);
-           
-           chan.setLightColor(Color.YELLOW);
-           chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-           NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-           assert manager != null;
-           manager.createNotificationChannel(chan);
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+			// TODO review if executing this code block only for newer versions is acceptable
+			String NOTIFICATION_CHANNEL_ID = "rogatkin.mobile.web.Atjeews";
+			String channelName = "Atjeews Service";
 
-           Notification.Builder notificationBuilder = new Notification.Builder(this, NOTIFICATION_CHANNEL_ID);
-           Notification notification = notificationBuilder.setOngoing(true)
-            //.setSmallIcon(R.drawable.icon_1)
-            .setContentTitle("Atjeews server")
-            .setPriority(NotificationManager.IMPORTANCE_MIN)
-            .setCategory(Notification.CATEGORY_SERVICE)
-            .build();
-            startForeground(2, notification);
-       }
+			NotificationChannel chan = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_NONE);
+
+			chan.setLightColor(Color.YELLOW);
+			chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+			NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+			assert manager != null;
+			manager.createNotificationChannel(chan);
+
+			Notification.Builder notificationBuilder = new Notification.Builder(this, NOTIFICATION_CHANNEL_ID);
+			@SuppressLint("WrongConstant") Notification notification = notificationBuilder.setOngoing(true)
+			//.setSmallIcon(R.drawable.icon_1)
+			.setContentTitle("Atjeews server")
+			.setPriority(NotificationManager.IMPORTANCE_MIN)
+			.setCategory(Notification.CATEGORY_SERVICE)
+			.build();
+			startForeground(2, notification);
+		}
+	}
 
 	private void stopServ() {
 		//srv.log(new Exception("stop"), "stop");
@@ -193,7 +196,7 @@ public class TJWSServ extends Service {
 					status = ST_RUN;
 					int code = 0;
 					if (wifiLock == null) {
-						WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+						WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 						wifiLock = wifiManager.createWifiLock(SERVICE_NAME);
 					}
 					try {
@@ -245,7 +248,9 @@ public class TJWSServ extends Service {
 		// //////////
 		srv = new AndroidServ(properties, logStream, (Object) this);
 		// add settings servlet
-		srv.addServlet("/settings", new Settings(this));
+		Servlet settings = new Settings(this);
+		srv.addServlet("/settings", settings);
+		srv.addServlet("/favicon.ico", settings);
 		System.setProperty(WebAppServlet.WAR_NAME_AS_CONTEXTPATH, "yes");
 		// set dex class loader
 		System.setProperty(WebApp.DEF_WEBAPP_CLASSLOADER,
@@ -306,8 +311,8 @@ public class TJWSServ extends Service {
 									+ deployDir);
 				deployDir = new File("/sdcard", DEPLOYMENTDIR);
 			}
-			System.setProperty(WebApp.DEF_WEBAPP_AUTODEPLOY_DIR,
-					deployDir.getPath());
+			String deployPath = deployDir.getPath();
+			System.setProperty(WebApp.DEF_WEBAPP_AUTODEPLOY_DIR, deployPath);
 		}
 		if (Main.DEBUG)
 			Log.d(SERVICE_NAME,

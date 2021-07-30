@@ -3,10 +3,12 @@
  */
 package rogatkin.mobile.web;
 
+import java.io.File;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -38,6 +40,8 @@ import android.os.Build;
 import android.content.pm.PackageManager;
 import android.Manifest;
 
+import rogatkin.web.WebApp;
+
 /**
  * Atjeews Android launcher of TJWS with administration support
  * 
@@ -47,15 +51,16 @@ import android.Manifest;
 public class Main extends Activity {
 	public static final String APP_NAME = "Atjeews";
 
-	public static final int APP_VER_MN = 5;
+//	public static final int APP_VER_MN = 5;
 
-	public static final int APP_VER_MJ = 1;
+//	public static final int APP_VER_MJ = 1;
 
 	public static final boolean DEBUG = false;
 
 	protected Config config;
 	protected ArrayList<String> servletsList;
 	protected String hostName;
+
 
 	/** Called when the activity is first created. */
 	@Override
@@ -78,19 +83,22 @@ public class Main extends Activity {
 		Button button = (Button) findViewById(R.id.button1);
 		button.setOnClickListener(new OnClickListener() {
 
+			@SuppressLint("StaticFieldLeak")
 			public void onClick(View v) {
 				final EditText surl = (EditText) findViewById(R.id.editText1);
 				String userInput = surl.getText().toString();
 				InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 				imm.hideSoftInputFromWindow(surl.getWindowToken(), 0);
-				if (userInput.length() <= "http://".length()) {
+				if (userInput.length() <= "https://".length()) {
 					Toast.makeText(Main.this, "Please specify location URL of .war", Toast.LENGTH_SHORT).show();
 					return;
 				}
-				if (config.app_deploy_lock) {
+				if (assess(Config.P_APPLOCK)) {
+//				if (config.app_deploy_lock) {
 					Toast.makeText(Main.this, "Deploying new apps is locked", Toast.LENGTH_SHORT).show();
 					return;
 				}
+				//noinspection deprecation
 				new AsyncTask<String, Void, Void>() {
 					private String lastError;
 					ProgressDialog dialog;
@@ -110,13 +118,11 @@ public class Main extends Activity {
 							builder.setTitle(R.string.t_error);
 							builder.create().show();
 						} else {
-							if (lastError == null) {
-								surl.setText("http://");
-								try {
-									fillServlets(servCtrl.getApps());
-								} catch (Exception e) {
-									reportProblem(e);
-								}
+							surl.setText("https://");
+							try {
+								fillServlets(manageSecretApps(servCtrl.getApps()));
+							} catch (Exception e) {
+								reportProblem(e);
 							}
 						}
 						super.onPostExecute(result);
@@ -153,9 +159,9 @@ public class Main extends Activity {
 				RCServ servCtrl = ((TJWSApp) getApplication())
 						.getServiceControl();
 				try {
-					if (servCtrl != null)
-						fillServlets(servCtrl.rescanApps());
-					else
+					if (servCtrl != null) {
+						fillServlets(manageSecretApps(servCtrl.rescanApps()));
+					} else
 						reportProblem(new Exception(
 								"Can't obtain service control - null"));
 				} catch (Exception e) {
@@ -219,6 +225,7 @@ public class Main extends Activity {
 	@Override
 	protected void onResume() {
 		super.onResume();
+		loadConfig();				//	/**/ new
 		updateUI();
 	}
 
@@ -307,10 +314,12 @@ public class Main extends Activity {
 		RCServ servCtrl = ((TJWSApp) getApplication()).getServiceControl();
 		if (appName == null || servCtrl == null)
 			return super.onContextItemSelected(item);
+//System.err.println("onContextItemSelected DSR = "+(config.app_deploy_lock?"-":"d")+(config.app_stop_lock?"-":"s")+(config.app_remove_lock?"-":"r"));
 		try {
 			switch (item.getItemId()) {
 			case R.id.app_redeploy:
-				fillServlets(servCtrl.redeployApp(appName));
+//				if (!"/settings".equals(appName))
+				fillServlets(manageSecretApps(servCtrl.redeployApp(appName)));
 				return true;
 			case R.id.app_info:
 				AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -332,32 +341,34 @@ public class Main extends Activity {
 				}
 				boolean ipv6 = !(hostName.indexOf(':') < 0);
 				Intent browserIntent;
-				if ("/settings".equals(appName))
-					browserIntent = new Intent(Intent.ACTION_VIEW,
-							Uri.parse("http" + (config.ssl ? "s" : "") + "://"
-									+ (ipv6 ? "[" : "") + hostName
-									+ (ipv6 ? "]" : "") + ":" + config.port
-									+ "/settings"));
-				else
-					browserIntent = new Intent(Intent.ACTION_VIEW,
-							Uri.parse("http"
-									+ (config.ssl ? "s" : "")
-									+ "://"
-									+ (ipv6 ? "[" : "")
-									+ hostName
-									+ (ipv6 ? "]" : "")
-									+ ":"
-									+ config.port
-									+ (appName.endsWith("/*") ? appName
-											.substring(0, appName.length() - 2)
-											: appName)));
+				browserIntent = new Intent(Intent.ACTION_VIEW,
+						Uri.parse("http" + (config.ssl ? "s" : "") + "://"
+								+ (ipv6 ? "[" : "") + hostName
+								+ (ipv6 ? "]" : "") + ":" + config.port
+								+ (appName.endsWith("/*") ? appName.substring(0, appName.length() - 2) : appName)));
 				startActivity(browserIntent);
 				return true;
 			case R.id.app_remove:
-				servCtrl.removeApp(appName);
+				if (assess(Config.P_APPREMOVE)) {	//				if (config.app_remove_lock) {
+					builder = new AlertDialog.Builder(this);
+					builder.setMessage(R.string.alrt_noremoval);
+					builder.setIcon(R.drawable.stop);
+					builder.setTitle(R.string.t_warning);
+					builder.create().show();
+					return true;
+				} else
+					servCtrl.removeApp(appName);
 				// coming through to stop
 			case R.id.app_stop:
-				fillServlets(servCtrl.stopApp(appName));
+				if (assess(Config.P_APPSTOP)) {		//				if (config.app_stop_lock) {
+					builder = new AlertDialog.Builder(this);
+					builder.setMessage(R.string.alrt_nostopping);
+					builder.setIcon(R.drawable.stop);
+					builder.setTitle(R.string.t_warning);
+					builder.create().show();
+				} else {
+					fillServlets(manageSecretApps(servCtrl.stopApp(appName)));
+				}
 				return true;
 			default:
 				return super.onContextItemSelected(item);
@@ -377,7 +388,7 @@ public class Main extends Activity {
 		((CheckBox) findViewById(R.id.checkBox2)).setChecked(config.logEnabled);
 	}
 
-       boolean requestPermissions(String perm, int code) { // android.Manifest.permission.READ_EXTERNAL_STORAGE
+	boolean requestPermissions(String perm, int code) { // android.Manifest.permission.READ_EXTERNAL_STORAGE
 		if (Build.VERSION.SDK_INT > 23) {
 			if (checkSelfPermission(perm)
 					== PackageManager.PERMISSION_GRANTED) {
@@ -390,7 +401,14 @@ public class Main extends Activity {
 			return true;
 		}
 	}
-	
+
+	private boolean assess(String settings_field) {
+		boolean cond = false;
+		if (config != null)
+			cond = config.assess(this, settings_field);
+		return cond;
+	}
+
 	protected void fillServlets(List<String> newList) {
 	        requestPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE, 3);
 		updateAppsList(newList, true);
@@ -403,8 +421,11 @@ public class Main extends Activity {
 				Log.e(APP_NAME, "Error happened at retrieving apps list");
 			return;
 		}
-		for (String servName : newList)
-			servletsList.add(servName);
+		for (String servName : manageSecretApps(newList)) {		// manageSecretApps() to skip hidden apps
+			if (!servName.equals("/favicon.ico")) {        		// necessary to always prevent actions for favicon.ico
+				servletsList.add(servName);
+			}
+		}
 		if (notify) {
 			ListView listView = (ListView) findViewById(R.id.listView1);
 			((BaseAdapter) ((HeaderViewListAdapter) listView.getAdapter())
@@ -470,6 +491,15 @@ public class Main extends Activity {
 			if (DEBUG)
 				Log.e(APP_NAME, "Unexpected problem:" + problem, problem);
 		Toast.makeText(this, "" + problem, Toast.LENGTH_LONG).show();
+	}
+
+	private List<String> manageSecretApps(List<String> app_list){
+		String[] hiddens = config.hidden_apps.split(":");
+		for (String hidden : hiddens) {
+			if (!"/settings".equals(hidden) && app_list.contains(hidden))    // /settings must never be hidden
+				app_list.remove(hidden);
+		}
+		return app_list;
 	}
 
 }

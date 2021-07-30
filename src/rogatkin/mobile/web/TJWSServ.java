@@ -62,6 +62,8 @@ public class TJWSServ extends Service {
 	public static final String KEYSTORE_DIR = "key";
 
 	public static final String KEYSTORE = "keystore";
+	
+	public static final String LOCALHOST = "127:0:0:1";
 
 	public static final int ST_RUN = 1;
 	public static final int ST_STOP = 0;
@@ -209,6 +211,12 @@ public class TJWSServ extends Service {
 							wifiLock.release();
 						status = code == 0 ? ST_STOP : ST_ERR;
 						// TODO find out how notify client
+						// if an error then if bind address not locakhost, then try restart localhost
+						if (status == ST_ERR) {
+						    if (srv.arguments.containsKey(Acme.Serve.Serve.ARG_BINDADDRESS))
+						          srv.arguments.remove(Acme.Serve.Serve.ARG_BINDADDRESS);
+						    config.bindAddr = null;
+						}
 					}
 				}
 			}.start();
@@ -384,7 +392,7 @@ public class TJWSServ extends Service {
 		// return getNonLookupAddress();
 	}
 
-	public static InetAddress getLookbackAddress() {
+	public static InetAddress getLookbackAddress() { // loopback
 		InetAddress result = null;
 		try {
 			for (Enumeration<NetworkInterface> en = NetworkInterface
@@ -470,7 +478,7 @@ public class TJWSServ extends Service {
 		resetServ();
 		/*
 		 * if (config.bindAddr == null) {
-		 * srv.arguments.put(Acme.Serve.Serve.ARG_BINDADDRESS, "127:0:0:1");
+		 * srv.arguments.put(Acme.Serve.Serve.ARG_BINDADDRESS, LOCALHOST);
 		 * return "localhost"; }
 		 */
 		InetAddress iadr = getLocalIpAddress();
@@ -496,11 +504,11 @@ public class TJWSServ extends Service {
 		srv.arguments.remove(Acme.Serve.Serve.ARG_BINDADDRESS);
 		if (Main.DEBUG)
 			Log.e(SERVICE_NAME, "No address bound");
-		//return "127:0:0:1";
+		
 		try {
 			return InetAddress.getLocalHost().getHostAddress();
 		} catch (UnknownHostException e) {
-			return "127:0:0:1"; // "::"
+			return LOCALHOST; // "::"  and make a localhost constant
 		}
 	}
 	
@@ -737,7 +745,7 @@ public class TJWSServ extends Service {
 				websocketProvider = new WSProvider();
 				websocketProvider.init(this);
 				websocketProvider.deploy(this, null);
-			} else
+			} else 
 				websocketProvider = null;
 		}
 

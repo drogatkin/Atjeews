@@ -22,5 +22,5 @@
     <string name="enable_log">Enable logging</string>
     <string name="version_info">1.01</string>
     <string name="enable_ssl">SSL</string>
-    <string name="at_port">&#169;</string>
+    <string name="at_port">"@"</string>
 </resources>

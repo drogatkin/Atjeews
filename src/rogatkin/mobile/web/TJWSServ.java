@@ -1,5 +1,5 @@
-/** Copyright 2011 Dmitriy Rogatkin, All rights reserved.
- *  $Id: TJWSServ.java,v 1.15 2012/09/15 17:47:27 dmitriy Exp $
+/** Copyright 2011-2021 Dmitriy Rogatkin, All rights reserved.
+ *  
  */
 package rogatkin.mobile.web;
 
@@ -62,8 +62,6 @@ public class TJWSServ extends Service {
 	public static final String KEYSTORE_DIR = "key";
 
 	public static final String KEYSTORE = "keystore";
-	
-	public static final String LOCALHOST = "127:0:0:1";
 
 	public static final int ST_RUN = 1;
 	public static final int ST_STOP = 0;
@@ -160,26 +158,29 @@ public class TJWSServ extends Service {
 	}
 	
 	private void startForegroundNew() {
-           String NOTIFICATION_CHANNEL_ID = "rogatkin.mobile.web.Atjeews";
-           String channelName = "Atjeews Service";     
-             
-           NotificationChannel chan = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_NONE);
-           
-           chan.setLightColor(Color.YELLOW);
-           chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-           NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-           assert manager != null;
-           manager.createNotificationChannel(chan);
+		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+			// TODO review if executing this code block only for newer versions is acceptable
+			String NOTIFICATION_CHANNEL_ID = "rogatkin.mobile.web.Atjeews";
+			String channelName = "Atjeews Service";
 
-           Notification.Builder notificationBuilder = new Notification.Builder(this, NOTIFICATION_CHANNEL_ID);
-           Notification notification = notificationBuilder.setOngoing(true)
-            //.setSmallIcon(R.drawable.icon_1)
-            .setContentTitle("Atjeews server")
-            .setPriority(NotificationManager.IMPORTANCE_MIN)
-            .setCategory(Notification.CATEGORY_SERVICE)
-            .build();
-            startForeground(2, notification);
-       }
+			NotificationChannel chan = new NotificationChannel(NOTIFICATION_CHANNEL_ID, channelName, NotificationManager.IMPORTANCE_NONE);
+
+			chan.setLightColor(Color.YELLOW);
+			chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+			NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+			assert manager != null;
+			manager.createNotificationChannel(chan);
+
+			Notification.Builder notificationBuilder = new Notification.Builder(this, NOTIFICATION_CHANNEL_ID);
+			@SuppressLint("WrongConstant") Notification notification = notificationBuilder.setOngoing(true)
+			//.setSmallIcon(R.drawable.icon_1)
+			.setContentTitle("Atjeews server")
+			.setPriority(NotificationManager.IMPORTANCE_MIN)
+			.setCategory(Notification.CATEGORY_SERVICE)
+			.build();
+			startForeground(2, notification);
+		}
+	}
 
 	private void stopServ() {
 		//srv.log(new Exception("stop"), "stop");
@@ -195,7 +196,7 @@ public class TJWSServ extends Service {
 					status = ST_RUN;
 					int code = 0;
 					if (wifiLock == null) {
-						WifiManager wifiManager = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+						WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 						wifiLock = wifiManager.createWifiLock(SERVICE_NAME);
 					}
 					try {
@@ -211,12 +212,6 @@ public class TJWSServ extends Service {
 							wifiLock.release();
 						status = code == 0 ? ST_STOP : ST_ERR;
 						// TODO find out how notify client
-						// if an error then if bind address not locakhost, then try restart localhost
-						if (status == ST_ERR) {
-						    if (srv.arguments.containsKey(Acme.Serve.Serve.ARG_BINDADDRESS))
-						          srv.arguments.remove(Acme.Serve.Serve.ARG_BINDADDRESS);
-						    config.bindAddr = null;
-						}
 					}
 				}
 			}.start();
@@ -253,7 +248,9 @@ public class TJWSServ extends Service {
 		// //////////
 		srv = new AndroidServ(properties, logStream, (Object) this);
 		// add settings servlet
-		srv.addServlet("/settings", new Settings(this));
+		Servlet settings = new Settings(this);
+		srv.addServlet("/settings", settings);
+		srv.addServlet("/favicon.ico", settings);
 		System.setProperty(WebAppServlet.WAR_NAME_AS_CONTEXTPATH, "yes");
 		// set dex class loader
 		System.setProperty(WebApp.DEF_WEBAPP_CLASSLOADER,
@@ -314,8 +311,8 @@ public class TJWSServ extends Service {
 									+ deployDir);
 				deployDir = new File("/sdcard", DEPLOYMENTDIR);
 			}
-			System.setProperty(WebApp.DEF_WEBAPP_AUTODEPLOY_DIR,
-					deployDir.getPath());
+			String deployPath = deployDir.getPath();
+			System.setProperty(WebApp.DEF_WEBAPP_AUTODEPLOY_DIR, deployPath);
 		}
 		if (Main.DEBUG)
 			Log.d(SERVICE_NAME,
@@ -392,7 +389,7 @@ public class TJWSServ extends Service {
 		// return getNonLookupAddress();
 	}
 
-	public static InetAddress getLookbackAddress() { // loopback
+	public static InetAddress getLookbackAddress() {
 		InetAddress result = null;
 		try {
 			for (Enumeration<NetworkInterface> en = NetworkInterface
@@ -478,7 +475,7 @@ public class TJWSServ extends Service {
 		resetServ();
 		/*
 		 * if (config.bindAddr == null) {
-		 * srv.arguments.put(Acme.Serve.Serve.ARG_BINDADDRESS, LOCALHOST);
+		 * srv.arguments.put(Acme.Serve.Serve.ARG_BINDADDRESS, "127:0:0:1");
 		 * return "localhost"; }
 		 */
 		InetAddress iadr = getLocalIpAddress();
@@ -504,11 +501,11 @@ public class TJWSServ extends Service {
 		srv.arguments.remove(Acme.Serve.Serve.ARG_BINDADDRESS);
 		if (Main.DEBUG)
 			Log.e(SERVICE_NAME, "No address bound");
-		
+		//return "127:0:0:1";
 		try {
 			return InetAddress.getLocalHost().getHostAddress();
 		} catch (UnknownHostException e) {
-			return LOCALHOST; // "::"  and make a localhost constant
+			return "127:0:0:1"; // "::"
 		}
 	}
 	
@@ -745,7 +742,7 @@ public class TJWSServ extends Service {
 				websocketProvider = new WSProvider();
 				websocketProvider.init(this);
 				websocketProvider.deploy(this, null);
-			} else 
+			} else
 				websocketProvider = null;
 		}
 

@@ -7,8 +7,8 @@
       <!ENTITY jasper "/home/dmitriy/projects/jasper-7.0.75">
       <!ENTITY keystore "/home/dmitriy/Documents/android-publish.keystore">
       <!ENTITY alias "app_release">
-      <!ENTITY target "30">
-      <!ENTITY build_tool "29.0.3">
+      <!ENTITY target "32">
+      <!ENTITY build_tool "30.0.3">
       <!ENTITY build_directory "build">
 ]>
 <!-- Build Atjeews Copyright 2021 (c) Dmitriy Rogatkin -->

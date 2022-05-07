@@ -312,8 +312,8 @@
   <expression name="dex lib">
      <operator name="append">
          <value variable="apk tmp dir"/>
-         <value>/</value>
-         <value>classes.jar</value>
+         <!--value>/</value>
+         <value>classes.jar</value-->
      </operator>
   </expression>
   <variable name="jar names"/>
@@ -367,6 +367,12 @@
       </task> 
   </target> 
   
+  <expression variable="classes dex">
+     <operator name="append">
+       <value variable="dex lib"/>
+       <value>/classes.dex</value>
+     </operator>
+   </expression>
   <target name="rest_aapt">
    <dependency target="d8"/>
       <task exec="aapt">
@@ -385,7 +391,7 @@
           <parameter>add</parameter> 
            <parameter>-k</parameter>
           <parameter>Atjeews.apk.unaligned</parameter> 
-          <parameter variable="dex lib"></parameter>
+          <parameter variable="classes dex"></parameter>
       </task>
   </target>  
      <target name="complete" dir=".">

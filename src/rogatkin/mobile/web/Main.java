@@ -39,6 +39,8 @@ import android.widget.Toast;
 import android.os.Build;
 import android.content.pm.PackageManager;
 import android.Manifest;
+import android.os.Environment;
+import android.provider.Settings;
 
 import rogatkin.web.WebApp;
 
@@ -69,6 +71,8 @@ public class Main extends Activity {
 		setContentView(R.layout.main);
 		// getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		loadConfig();
+		
+		requestPermission(Manifest.permission.READ_EXTERNAL_STORAGE);
 		servletsList = new ArrayList<String>();
 		// getWindow().setSoftInputMode(
 		// WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
@@ -200,6 +204,40 @@ public class Main extends Activity {
 					}
 				});
 		//updateUI();
+	}
+	
+	public boolean requestPermission(String p) {
+		if (Build.VERSION.SDK_INT >= 23) {
+			if (checkSelfPermission(p)
+					== PackageManager.PERMISSION_GRANTED) {
+				if (DEBUG)
+					Log.v(APP_NAME,"Permission "+p+" is granted");
+				if((p == Manifest.permission.WRITE_EXTERNAL_STORAGE ||
+				    p == Manifest.permission.READ_EXTERNAL_STORAGE) && Build.VERSION.SDK_INT >= 30) {
+					if (Environment.isExternalStorageManager()) {
+						//todo when permission is granted
+						return true;
+					} else {
+						//request for the permission
+					//	if (options.fileManagementRequested())
+					//		return true;
+						Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+						Uri uri = Uri.fromParts("package", getPackageName(), null);
+						intent.setData(uri);
+						startActivity(intent);
+					//	options.fileManagementRequested(true);
+					}
+					return false;
+				}
+				return true;
+			} else {
+				if (DEBUG)
+					Log.v(APP_NAME,"Permission "+p+" is revoked1");
+				requestPermissions(new String[]{p}, 3);
+				return false;
+			}
+		}
+		return true;
 	}
 
 	@Override

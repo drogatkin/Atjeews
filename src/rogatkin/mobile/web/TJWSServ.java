@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Properties;
 
 import javax.servlet.Servlet;
+import javax.servlet.ServletException;
 
 import rogatkin.web.WarRoller;
 import rogatkin.web.WebApp;
@@ -741,7 +742,13 @@ public class TJWSServ extends Service {
 			if (config.websocket_enab) {
 				websocketProvider = new WSProvider();
 				websocketProvider.init(this);
-				websocketProvider.deploy(this, null);
+				try {
+				    websocketProvider.deploy(this, null);
+				} catch(ServletException se) {
+				    if (Main.DEBUG)
+					Log.e(SERVICE_NAME, "Can't deploy a websocket provider",
+							se);
+				}
 			} else
 				websocketProvider = null;
 		}

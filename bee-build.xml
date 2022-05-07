@@ -5,13 +5,14 @@
       <!ENTITY jdk_root "">
       <!ENTITY tjws_src "/home/dmitriy/projects/TJWS2/1.x">
       <!ENTITY jasper "/home/dmitriy/projects/jasper-7.0.75">
+      <!ENTITY fast_scanner "/home/dmitriy/projects/fast-classpath-scanner/lib">
       <!ENTITY keystore "/home/dmitriy/Documents/android-publish.keystore">
       <!ENTITY alias "app_release">
       <!ENTITY target "32">
       <!ENTITY build_tool "30.0.3">
       <!ENTITY build_directory "build">
 ]>
-<!-- Build Atjeews Copyright 2021 (c) Dmitriy Rogatkin -->
+<!-- Build Atjeews Copyright 2022 (c) Dmitriy Rogatkin -->
 <bee name="apk-packaging" type="script">
      <expression name="apk tmp dir" >
          <operator name="append" >
@@ -231,6 +232,8 @@
        <value type="repo_artifact">maven:javax.websocket:javax.websocket-api:1.1</value>
        <value variable="PATH SEPARATOR"/>
        <value>&jasper;/build/jasper.jar</value>
+       <value variable="PATH SEPARATOR"/>
+       <value>&fast_scanner;/class-scanner.jar</value>
     </operator>
   </expression>
 
@@ -239,13 +242,13 @@
         <!--value>&android_sdk;/platforms/android-&target;/android.jar</value>
         <value variable="PATH SEPARATOR"/-->
         <value variable="PROJECT_HOME"/>
-        <value>/&build_directory;</value>
+        <value>/&build_directory;/atjeews.jar</value>
         <value variable="PATH SEPARATOR"/>
         <value variable="CUSTOM CP"/>
      </operator>
   </expression>
   
-  <variable name="comp target">1.7</variable>
+  <variable name="comp target">1.8</variable>
   
   <target name="compile" dir="PROJECT_HOME">
     <dependency target="check build"/>
@@ -290,9 +293,9 @@
   <target name="jar">
     <echo>Jarring...</echo>
     <dependency target="compile"/>
-    <task name="jar_do" code="sun.tools.jar.Main">
+    <task name="jar_do" code="sun.tools.jar.Main" tool="jar">
        <parameter>-cf</parameter>
-       <parameter value="&build_directory;/atjeews" type="file"/>
+       <parameter value="&build_directory;/atjeews.jar" type="file"/>
        <parameter value="-C"/>
        <parameter value="&build_directory;" type="dir"/>
        <parameter value="rogatkin" type="dir"/>
@@ -308,9 +311,9 @@
   </target>
   <expression name="dex lib">
      <operator name="append">
-         <value variable="apk tmp dir"/>git
+         <value variable="apk tmp dir"/>
          <value>/</value>
-         <value>classes.dex</value>
+         <value>classes.jar</value>
      </operator>
   </expression>
   <variable name="jar names"/>
@@ -333,6 +336,7 @@
      </function>
   </expression-->
   <variable name="dx path">&android_sdk;/build-tools/&build_tool;/lib/dx.jar</variable>
+  <variable name="dx8 path">&android_sdk;/build-tools/&build_tool;/lib/d8.jar</variable>
   <target name="dex">
      <dependency target="jar"/>
       <task name="dex_do" code="com.android.dx.command.Main" path="dx path"> <!-- without dex com.android.dx.command.dexer.Main  -->
@@ -348,8 +352,23 @@
                             <parameter>/home/dmitriy/projects/TJWS2/1.x/lib/wskt.jar</parameter-->
       </task> 
   </target> 
+  <echo variable="jar names"/>
+  <target name="d8">
+      <dependency target="jar"/>
+      <task name="d8_do" code="com.android.tools.r8.D8" path="dx8 path"> <!-- without dex com.android.dx.command.dexer.Main  -->
+                            <parameter value="--lib"/>
+                            <parameter value="&android_sdk;/platforms/android-&target;/android.jar"/>
+                            <parameter value="--release"/>
+                            <parameter value="--output"/>>
+                            <parameter  variable="dex lib"/>
+                            <parameter variable="jar names"/>
+                            <!--parameter>/home/dmitriy/projects/TJWS2/1.x/lib/webserver.jar</parameter>
+                            <parameter>/home/dmitriy/projects/TJWS2/1.x/lib/wskt.jar</parameter-->
+      </task> 
+  </target> 
+  
   <target name="rest_aapt">
-   <dependency target="dex"/>
+   <dependency target="d8"/>
       <task exec="aapt">
             <parameter>package</parameter>
             <parameter>-f</parameter>

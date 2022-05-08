@@ -9,10 +9,11 @@
       <!ENTITY keystore "/home/dmitriy/Documents/android-publish.keystore">
       <!ENTITY alias "app_release">
       <!ENTITY target "32">
-      <!ENTITY build_tool "30.0.3">
+      <!ENTITY build_tool "30.0.2">
       <!ENTITY build_directory "build">
 ]>
-<!-- Build Atjeews Copyright 2022 (c) Dmitriy Rogatkin -->
+<!-- Build Atjeews Copyright 2022 (c) Dmitriy Rogatkin 
+     ref: https://github.com/2BAB/BuildingAndroidAppManually/blob/master/build.sh -->
 <bee name="apk-packaging" type="script">
      <expression name="apk tmp dir" >
          <operator name="append" >
@@ -42,9 +43,16 @@
              <value>/gen</value>
          </operator>
      </expression>
-     <expression name="aapt">
+     <expression name="apk gen file" >
+         <operator name="append" >
+             <value
+                 variable="apk gen dir" />
+             <value>/*.flat</value>
+         </operator>
+     </expression>
+     <expression name="aapt2">
          <operator name="append">
-           <value>&android_sdk;/build-tools/&build_tool;/aapt</value>
+           <value>&android_sdk;/build-tools/&build_tool;/aapt2</value>
          </operator>
      </expression>
      <expression name="aidl">
@@ -54,7 +62,7 @@
      </expression>
      <target name="remove_old">
         <block>
-             <echo>Cleaning working folder</echo>
+             <echo>Cleaning the working folder</echo>
                     <expression name="clean dir*">
                         <operator name="append">
                             <value variable="apk tmp dir"/>
@@ -70,12 +78,12 @@
                             </function>
                         </expression>
                         <else>
-                            <echo>Can not clean working directory, please do it manually and restart the script</echo>
+                            <echo>Can not clean the working directory, please do it manually and restart the script</echo>
                             <echo variable="clean dir*"/>
                             <interrupt/>
                         </else>
                     </if>  
-          </block>
+       </block>
      </target>
      <target name="create dirs">
         <dependency target="remove_old"></dependency>
@@ -117,22 +125,47 @@
             <parameter>src/rogatkin/mobile/web/RCServ.aidl</parameter>
          </task>
      </target>
+     
      <target name="pack_res">
-        <dependency target="idl gen"></dependency>
-         <task exec="aapt">
-            <parameter>package</parameter>
-            <parameter>-f</parameter>
-            <parameter>-m</parameter>
-            <parameter>-J</parameter>
+         <dependency target="idl gen"></dependency>
+       
+         <task exec="aapt2">
+            <parameter>compile</parameter>
+            <parameter>-o</parameter>
              <parameter variable="apk gen dir"/>
-             <parameter>-M</parameter>
-             <parameter>AndroidManifest.xml</parameter>
-             <parameter>-S</parameter>
+             <!--parameter variable="unpacked apk"/-->
+             <parameter>--dir</parameter>
              <parameter>res</parameter>
-             <parameter>-I</parameter>
-             <parameter>&android_sdk;/platforms/android-&target;/android.jar</parameter>
          </task>
      </target>
+     
+     <target name="link_res">
+         <dependency target="pack_res"></dependency>
+             <task exec="aapt2">
+             <parameter>link</parameter>
+             <parameter variable="apk gen file" type="file"/>
+             <!--parameter>
+                  <operator name="append">
+                     <value variable="apk gen dir"/>
+                     <value>/*.flat</value>
+                  </operator>
+             </parameter-->
+             <parameter>--java</parameter>
+             <parameter variable="apk gen dir"/>
+             <parameter>-I</parameter> 
+             <parameter>&android_sdk;/platforms/android-&target;/android.jar</parameter>
+             <parameter>--min-sdk-version</parameter>
+             <parameter>6</parameter>
+             <parameter>--target-sdk-version</parameter>
+             <parameter value="32"/>
+             <parameter>-o</parameter>
+             <parameter>Atjeews.apk.link</parameter>"
+             <parameter>--manifest</parameter> 
+             <parameter>AndroidManifest.xml</parameter>
+             <parameter value="-v"/>
+         </task>
+     </target>
+     
    <target name="check build" dir="PROJECT_HOME">
      <dependency>
         <expression>
@@ -144,16 +177,21 @@
           </operator>
         </expression>
      </dependency>
+     <dependency>true</dependency>
      <block>
        <function name="mkd">
          <parameter value="&build_directory;"/>
+       </function>
+       <function name="rm">
+          <parameter value="&build_directory;/*/*/*/*"/>
        </function>
      </block>
   </target>
   <expression variable="PATH SEPARATOR">
       <value name="path.separator" type="property"/>
   </expression>
-      <variable name="PROJECT_HOME" type="path">.</variable>
+     <variable name="PROJECT_HOME" type="path">.</variable>
+     <!-- this is incorrect because doesn't count R class correctly -->
      <expression variable="java sources">
         <function name="newerwithdependency">
            <parameter variable="src path"/>
@@ -253,7 +291,7 @@
   <target name="compile" dir="PROJECT_HOME">
     <dependency target="check build"/>
     <dependency variable="java sources"/>
-    <dependency target="pack_res"/>
+    <dependency target="link_res"/>
     <task exec="javac">
        <parameter value="-Xbootclasspath:&android_sdk;/platforms/android-&target;/android.jar"/>
        <!--parameter value="&android_sdk;/platforms/android-&target;/android.jar"/-->
@@ -313,7 +351,7 @@
      <operator name="append">
          <value variable="apk tmp dir"/>
          <!--value>/</value>
-         <value>classes.jar</value-->
+         <value>classes.dex</value-->
      </operator>
   </expression>
   <variable name="jar names"/>
@@ -335,24 +373,9 @@
         <parameter>true</parameter>
      </function>
   </expression-->
-  <variable name="dx path">&android_sdk;/build-tools/&build_tool;/lib/dx.jar</variable>
+
   <variable name="dx8 path">&android_sdk;/build-tools/&build_tool;/lib/d8.jar</variable>
-  <target name="dex">
-     <dependency target="jar"/>
-      <task name="dex_do" code="com.android.dx.command.Main" path="dx path"> <!-- without dex com.android.dx.command.dexer.Main  -->
-                            <parameter>--dex</parameter>
-                            <parameter>
-                                <operator name="append">
-                                    <value>--output=</value>
-                                    <value variable="dex lib"/>
-                                </operator>
-                            </parameter>
-                            <parameter variable="jar names"/>
-                            <!--parameter>/home/dmitriy/projects/TJWS2/1.x/lib/webserver.jar</parameter>
-                            <parameter>/home/dmitriy/projects/TJWS2/1.x/lib/wskt.jar</parameter-->
-      </task> 
-  </target> 
-  <echo variable="jar names"/>
+  
   <target name="d8">
       <dependency target="jar"/>
       <task name="d8_do" code="com.android.tools.r8.D8" path="dx8 path"> <!-- without dex com.android.dx.command.dexer.Main  -->
@@ -373,29 +396,9 @@
        <value>/classes.dex</value>
      </operator>
    </expression>
-  <target name="rest_aapt">
-   <dependency target="d8"/>
-      <task exec="aapt">
-            <parameter>package</parameter>
-            <parameter>-f</parameter>
-            <parameter>-M</parameter> 
-            <parameter>AndroidManifest.xml</parameter>
-            <parameter>-S</parameter> 
-            <parameter>res</parameter> 
-            <parameter>-I</parameter> 
-            <parameter>&android_sdk;/platforms/android-&target;/android.jar</parameter> 
-            <parameter>-F</parameter> 
-            <parameter>Atjeews.apk.unaligned</parameter>
-      </task>
-      <task exec="aapt">
-          <parameter>add</parameter> 
-           <parameter>-k</parameter>
-          <parameter>Atjeews.apk.unaligned</parameter> 
-          <parameter variable="classes dex"></parameter>
-      </task>
-  </target>  
+  
      <target name="complete" dir=".">
-      <dependency target="rest_aapt"/>
+      <dependency target="d8"/>
      <block>
      <function name="mkd">
          <parameter variable="unpacked apk"/>
@@ -428,21 +431,29 @@
              <value>/*</value>
          </operator>
      </expression>
-      <function name="zip">
-         <parameter value="Atjeews.apk.unaligned"/>
+      <!--function name="zip">
+         <parameter value="Atjeews.apk.link"/>
          <parameter variable="unpacked apk dirs" type="file"/>
-     </function>
-     <task exec="jarsigner" path="&jdk_root;/bin">
-          <parameter>-verbose</parameter>
-          <parameter>-sigalg</parameter>
-          <parameter>SHA1withRSA</parameter>
-          <parameter>-digestalg</parameter>
-          <parameter>SHA1</parameter>
-          <parameter>-keystore</parameter>
-          <parameter>&keystore;</parameter>
-          <parameter value="Atjeews.apk.unaligned"/>
-          <parameter>&alias;</parameter>
+         <parameter variable="classes dex"></parameter>
+     </function-->
+     <expression name="tools path">
+        <function name="scalar">
+           <parameter value="&android_sdk;/tools/lib/*.jar" type="file"/>
+           <parameter name="path.separator" type="property"/>
+        </function>   
+     </expression>
+     <task code="com.android.sdklib.build.ApkBuilderMain" path="tools path">
+         <parameter value="Atjeews.apk.unaligned"/>
+         <parameter value="-u"/>
+         <parameter value="-v"/>
+         <parameter value="-z"/>
+         <parameter value="Atjeews.apk.link"/>
+         <parameter value="-f"/>
+         <parameter variable="classes dex"></parameter>
+         <parameter value="-rf"/>
+         <parameter variable="unpacked apk"/>
      </task>
+ 
      <expression name = "apk align">
          <operator name="append">
              <value variable="apk file"/>
@@ -455,9 +466,17 @@
           <parameter variable="Atjeews.apk.unaligned"/>
           <parameter variable="apk align"/>  
       </task>
+      <task exec="&android_sdk;/build-tools/&build_tool;/apksigner" path="&android_sdk;/build-tools/&build_tool;">
+          <parameter>sign</parameter>
+          
+          <parameter>-ks</parameter>
+          <parameter>&keystore;</parameter>
+          <parameter variable="apk align"/>
+          
+     </task>
       <function name="rm">
          <parameter variable="Atjeews.apk.unaligned"/>
-
+         <parameter variable="Atjeews.apk.link"/>
       </function>
       <expression name="apk file">
          <operator name="append">

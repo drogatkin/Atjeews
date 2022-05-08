@@ -167,24 +167,28 @@
      </target>
      
    <target name="check build" dir="PROJECT_HOME">
-     <dependency>
-        <expression>
-          <operator name="eq">
-            <function name ="timestamp">
-               <parameter value="&build_directory;"/>
-            </function>
-            <value></value>
-          </operator>
-        </expression>
-     </dependency>
      <dependency>true</dependency>
      <block>
-       <function name="mkd">
-         <parameter value="&build_directory;"/>
-       </function>
-       <function name="rm">
-          <parameter value="&build_directory;/*/*/*/*"/>
-       </function>
+       <if>
+          <expression>
+		  <operator name="eq">
+		    <function name ="timestamp">
+		       <parameter value="&build_directory;"/>
+		    </function>
+		    <value></value>
+		 </operator>
+          </expression>
+          <then>
+	       <function name="mkd">
+		 <parameter value="&build_directory;"/>
+	       </function>
+	  </then>
+	  <else>
+	       <function name="rm">
+		  <parameter value="&build_directory;/*/*/*/*"/>
+	       </function>
+	  </else>
+        </if>
      </block>
   </target>
   <expression variable="PATH SEPARATOR">

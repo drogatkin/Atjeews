@@ -184,8 +184,9 @@
 	       </function>
 	  </then>
 	  <else>
+	       <echo>Cleaning the build directory</echo>
 	       <function name="rm">
-		  <parameter value="&build_directory;/*/*/*/*"/>
+		  <parameter value="&build_directory;/*/*/*/*/*"/>
 	       </function>
 	  </else>
         </if>
@@ -429,17 +430,17 @@
         </function> 
         </block>
      </for>
-     <expression name="unpacked apk dirs">
+     <expression name="meta-inf dir">
          <operator name="append">
              <value variable="unpacked apk"/>
-             <value>/*</value>
+             <value>/META-INF</value>
          </operator>
      </expression>
-      <!--function name="zip">
+     <!--function name="zip">
          <parameter value="Atjeews.apk.link"/>
-         <parameter variable="unpacked apk dirs" type="file"/>
-         <parameter variable="classes dex"></parameter>
+         <parameter variable="meta-inf dir"/>
      </function-->
+     
      <expression name="tools path">
         <function name="scalar">
            <parameter value="&android_sdk;/tools/lib/*.jar" type="file"/>
@@ -458,6 +459,11 @@
          <parameter variable="unpacked apk"/>
      </task>
  
+     <!--function name="zip">
+         <parameter value="Atjeews.apk.unaligned"/>
+         <parameter variable="meta-inf dir"/>
+     </function-->
+     
      <expression name = "apk align">
          <operator name="append">
              <value variable="apk file"/>

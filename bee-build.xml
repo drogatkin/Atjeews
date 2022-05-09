@@ -447,7 +447,15 @@
            <parameter name="path.separator" type="property"/>
         </function>   
      </expression>
-     <task code="com.android.sdklib.build.ApkBuilderMain" path="tools path">
+     <expression name="custom tools path">
+        <operator name="append">
+           <value value="/home/dmitriy/projects/sdklib/build/android-build.jar"/>
+           <value name="path.separator" type="property"/>
+           <value variable="-tools path"/>
+        </operator>   
+     </expression>
+     <!-- Note: the builder is patched to populate META-INF/... correctly -->
+     <task code="com.android.sdklib.build.ApkBuilderMain" path="custom tools path">
          <parameter value="Atjeews.apk.unaligned"/>
          <parameter value="-u"/>
          <parameter value="-v"/>
@@ -458,11 +466,6 @@
          <parameter value="-rf"/>
          <parameter variable="unpacked apk"/>
      </task>
- 
-     <!--function name="zip">
-         <parameter value="Atjeews.apk.unaligned"/>
-         <parameter variable="meta-inf dir"/>
-     </function-->
      
      <expression name = "apk align">
          <operator name="append">

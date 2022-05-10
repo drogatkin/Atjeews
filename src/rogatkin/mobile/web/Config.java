@@ -40,6 +40,8 @@ public class Config {
 	static final String P_WEBSOCKET = "websocket";
 	
 	static final String P_BACKLOG = "backlog";
+	
+	static final String P_TV_DEVICE = "tv_run";
 
 	public String app_version;
 	public InetAddress iadr;
@@ -52,6 +54,7 @@ public class Config {
 	public boolean logEnabled;
 	public boolean virtualHost;
 	public boolean useSD = true;
+	public boolean TV;
 	public String alienOrigin;
 	public String hidden_apps;
 	public String rootApp;
@@ -120,6 +123,14 @@ public class Config {
 		rootApp = prefs.getString(P_ROOTAPP, null);
 		wwwFolder = prefs.getString(P_WEBROOT, "/sdcard");
 		password = prefs.getString(P_PASSWRD, null);
+		TV = prefs.getBoolean(P_TV_DEVICE, false);
+	}
+	
+	protected void setTV(Context context, boolean on) {
+	    SharedPreferences prefs = context.getSharedPreferences(Main.APP_NAME, Context.MODE_WORLD_READABLE);
+		SharedPreferences.Editor editor = prefs.edit();
+		editor.putBoolean(P_TV_DEVICE, on);
+		editor.commit(); // apply();
 	}
 
 	public boolean assess(Context context, String settings_field) {

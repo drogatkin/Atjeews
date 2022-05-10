@@ -459,7 +459,8 @@
            <value variable="-tools path"/>
         </operator>   
      </expression>
-     <!-- Note: the builder is patched to populate META-INF/... correctly -->
+     <!-- Note: the builder is patched to populate META-INF/... correctly 
+          The custom build mimics sdklib-26.0.0-dev.jar from Androllid SDK tools -->
      <task code="com.android.sdklib.build.ApkBuilderMain" path="custom tools path">
          <parameter value="Atjeews.apk.unaligned"/>
          <parameter value="-u"/>

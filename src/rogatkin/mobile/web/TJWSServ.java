@@ -386,11 +386,11 @@ public class TJWSServ extends Service {
 						+ e.toString());
 			return null;
 		}
-		return getLookbackAddress();
+		return getLookbackAddress(config.TV);
 		// return getNonLookupAddress();
 	}
 
-	public static InetAddress getLookbackAddress() {
+	public static InetAddress getLookbackAddress(boolean not) {
 		InetAddress result = null;
 		try {
 			for (Enumeration<NetworkInterface> en = NetworkInterface
@@ -399,7 +399,8 @@ public class TJWSServ extends Service {
 				for (Enumeration<InetAddress> enumIpAddr = intf
 						.getInetAddresses(); enumIpAddr.hasMoreElements();) {
 					InetAddress inetAddress = enumIpAddr.nextElement();
-					if (inetAddress.isLoopbackAddress()) {
+					
+					if (not || inetAddress.isLoopbackAddress()) {
 						if (isIPv4Address(inetAddress
 										.getHostAddress()))
 							return inetAddress;

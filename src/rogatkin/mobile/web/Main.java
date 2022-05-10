@@ -41,6 +41,8 @@ import android.content.pm.PackageManager;
 import android.Manifest;
 import android.os.Environment;
 import android.provider.Settings;
+import android.content.res.Configuration;
+import android.app.UiModeManager;
 
 import rogatkin.web.WebApp;
 
@@ -420,10 +422,17 @@ public class Main extends Activity {
 	protected void loadConfig() {
 		if (config == null)
 			config = new Config();
+		config.setTV(this, isTV());
 		config.load(this);
+		
 		((EditText) findViewById(R.id.editPort)).setText("" + config.port);
 		((CheckBox) findViewById(R.id.checkSSL)).setChecked(config.ssl);
 		((CheckBox) findViewById(R.id.checkBox2)).setChecked(config.logEnabled);
+	}
+	
+	protected boolean isTV() {
+	    UiModeManager uiModeManager = (UiModeManager) getSystemService(UI_MODE_SERVICE);
+		return uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION;
 	}
 
 	boolean requestPermissions(String perm, int code) { // android.Manifest.permission.READ_EXTERNAL_STORAGE

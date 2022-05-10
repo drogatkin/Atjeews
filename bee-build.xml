@@ -7,8 +7,11 @@
       <!ENTITY jasper "/home/dmitriy/projects/jasper-7.0.75">
       <!ENTITY fast_scanner "/home/dmitriy/projects/fast-classpath-scanner/lib">
       <!ENTITY keystore "/home/dmitriy/Documents/android-publish.keystore">
-      <!ENTITY alias "app_release">
+      <!ENTITY sdklib_custom "/home/dmitriy/projects/sdklib/build">
       <!ENTITY target "32">
+      <!ENTITY min_sdk "6">
+      <!ENTITY version_name "1.4">
+      <!ENTITY version_code "19">
       <!ENTITY build_tool "30.0.2">
       <!ENTITY build_directory "build">
 ]>
@@ -155,13 +158,15 @@
              <parameter>-I</parameter> 
              <parameter>&android_sdk;/platforms/android-&target;/android.jar</parameter>
              <parameter>--min-sdk-version</parameter>
-             <parameter>6</parameter>
+             <parameter>&min_sdk;</parameter>
              <parameter>--target-sdk-version</parameter>
-             <parameter value="32"/>
+             <parameter value="&target;"/>
              <parameter>-o</parameter>
              <parameter>Atjeews.apk.link</parameter>"
              <parameter>--manifest</parameter> 
              <parameter>AndroidManifest.xml</parameter>
+             <parameter>--version-code</parameter>
+             <parameter>&version_code;</parameter>
              <parameter value="-v"/>
          </task>
      </target>
@@ -449,7 +454,7 @@
      </expression>
      <expression name="custom tools path">
         <operator name="append">
-           <value value="/home/dmitriy/projects/sdklib/build/android-build.jar"/>
+           <value value="&sdklib_custom;/android-build.jar"/>
            <value name="path.separator" type="property"/>
            <value variable="-tools path"/>
         </operator>   

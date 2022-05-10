@@ -7,7 +7,7 @@
     <string name="http_prfx">https://</string>
     <string name="deploy">Deploy</string>
     <string name="list_deployed">Deployed web apps</string>
-    <string name="app_version">1.3</string>
+    
     <string name="menu_app_redeploy">Redeploy</string>
     <string name="menu_app_remove">Remove</string>
     <string name="menu_app_stop">Stop</string>
@@ -22,7 +22,8 @@
     <string name="t_error">Error</string>
     <string name="alrt_problem">Problem happened %s</string>
     <string name="enable_log">Enable logging</string>
-    <string name="version_info">1.01</string>
+    <string name="version_info">1.40</string>
+    <string name="app_version">1.40</string>
     <string name="enable_ssl">SSL</string>
     <string name="at_port">"@"</string>
 </resources>

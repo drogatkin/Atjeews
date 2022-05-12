@@ -15,8 +15,9 @@
       <!ENTITY main_class "&domain;.android.sdklib.build.ApkBuilderMain">  <!-- type main class for run -->
       ]>
 <!--
-   make file used for "generic" project
-   Copyright (c) 2004-2022 Dmitriy Rogatkin    -->
+   make file used for the build SDK TOOL project
+   Copyright (c) 2004-2022 Dmitriy Rogatkin 
+   Use this script to build sdklib-26.0.0-dev.jar    -->
 
 <bee name="&project;" type="project">
   &env;

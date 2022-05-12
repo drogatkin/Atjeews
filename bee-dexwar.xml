@@ -7,11 +7,11 @@
       <!ENTITY tjws_wskt_lib "/home/dmitriy/projects/TJWS2/1.x/lib/wskt.jar">
       <!ENTITY fast_scan_lib "/home/dmitriy/projects/fast-classpath-scanner/lib/class-scanner.jar">
       <!ENTITY target "30">
-      <!ENTITY build_ver "29.0.3">
+      <!ENTITY build_ver "30.0.3">
 ]>
-<!-- Prepare a war file for Android deployment, Copyright 2021 (c) Dmitriy Rogatkin -->
+<!-- Prepare a war file for Android deployment, Copyright 2022 (c) Dmitriy Rogatkin -->
 <bee name="dexer" type="script">
-    <variable name="dx path">&android_sdk;/build-tools/&build_ver;/lib/dx.jar</variable>
+    <variable name="d8 path">&android_sdk;/build-tools/&build_ver;/lib/d8.jar</variable>
     <expression name="jre crop">
        <if>
          <expression>
@@ -49,6 +49,7 @@
     </expression>
     <variable name="source war"/>
     <variable name="dest war"/>
+    <!-- TODO 'rm' destinatin war, or exit if it exists -->
     <target name="dex war" dir=".">
         <variable name="current"/>
         <block>
@@ -88,6 +89,44 @@
                     </else>
                 </if>
             </for>
+
+            <if>
+                <expression>
+                    <operator name="eq">
+                        <value variable="dest war"/>
+                        <value/>
+                    </operator>
+                </expression>
+                <then>
+                    <expression name="dest war">
+                        <operator name="append">
+                            <value name="user.dir" type="property"/>
+                            <value name="file.separator" type="property"/>
+                            <function name="filename">
+                                <parameter variable="source war"/>
+                            </function>
+                            <value>.war</value>
+                        </operator>
+                    </expression>
+                </then>
+            </if>
+            
+            <if>
+                <expression>
+          		<operator name="neq">
+		             <function name ="timestamp">
+		                <parameter variable="dest war" type="path"/>
+		             </function>
+		             <value/>
+                  	</operator>          
+                </expression>
+		    <then>
+		        <echo>The destination .war already exists</echo>
+		        <echo>Delete it first or select another name</echo>
+		        <interrupt/>
+		    </then>
+            </if>
+                        
             <expression name="unwar dir">
                 <operator name="append">
                     <value name="java.io.tmpdir" type="property"/>
@@ -364,7 +403,13 @@
             <function name="mkd">
                 <parameter variable="dex lib"/>
             </function>
-            <variable name="app archive"/>
+            <expression name="dex lib">
+                <operator name="append">
+                    <value variable="dex lib"/>
+                    <value>/allclasses.jar</value>
+                </operator>
+            </expression>
+            <echo variable="all jars"/>
             <if>
                 <expression>
                     <operator name="neq">
@@ -373,28 +418,22 @@
                     </operator>
                 </expression>
                 <then>
-                    <for variable="app archive" in="all jars">
-                        <echo variable="app archive"/>
-                        <task name="dex_do" code="com.android.dx.command.Main" path="dx path">
-                            <parameter>--dex</parameter>
-                            <parameter>
-                                <operator name="append">
-                                    <value>--output=</value>
-                                    <value variable="dex lib"/>
-                                    <value name="file.separator" type="property"/>
-                                    <expression>
-                                        <function name="filename">
-                                            <parameter variable="app archive"/>
-                                        </function>
-                                    </expression>
-                                    <value>.jar</value>
-                                </operator>
-                            </parameter>
-                            <parameter variable="app archive"/>
-                        </task>
-                    </for>
+                       <expression name="dex archive">
+                       </expression> 
+		        <task name="d8_do" code="com.android.tools.r8.D8" path="d8 path">
+		            <parameter>--lib</parameter>
+		            <parameter>&android_sdk;/platforms/android-&target;/android.jar</parameter>
+		            <parameter value="--release"/>
+		            <parameter value="--output"/>
+		            <parameter variable="dex lib"/>
+		            <parameter value="--min-api"/>
+		            <parameter value="23"/>
+		            <parameter variable="all jars"/>
+		        </task>
+
                 </then>
             </if>
+            
             <expression name="all jars">
                 <!-- work around 'rm' doesn't understand arrays -->
                 <operator name="append">
@@ -413,44 +452,13 @@
                     <interrupt/>
                 </else>
             </if>
-            <expression name="all dexs">
-                <operator name="append">
-                    <value variable="dex lib"/>
-                    <value>/*</value>
-                </operator>
-            </expression>
-            <expression name="all dexs">
-                <value variable="all dexs" type="file"/>
-            </expression>
-            <for variable="app archive" in="all dexs">
-                <expression>
-                    <function name="mv">
-                        <parameter variable="app archive"/>
+            
+            <function name="mv">
+                        <parameter variable="dex lib"/>
                         <parameter variable="jars dir"/>
-                    </function>
-                </expression>
-            </for>
+            </function>
             <!-- zip back in war -->
-            <if>
-                <expression>
-                    <operator name="eq">
-                        <value variable="dest war"/>
-                        <value/>
-                    </operator>
-                </expression>
-                <then>
-                    <expression name="dest war">
-                        <operator name="append">
-                            <value name="user.dir" type="property"/>
-                            <value name="file.separator" type="property"/>
-                            <function name="filename">
-                                <parameter variable="source war"/>
-                            </function>
-                            <value>.war</value>
-                        </operator>
-                    </expression>
-                </then>
-            </if>
+            
             <expression name="unwar dir">
                 <operator name="append">
                     <value variable="unwar dir"/>

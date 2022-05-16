@@ -4,7 +4,7 @@
       <!ENTITY android_sdk "/home/dmitriy/Android/Sdk">
       <!ENTITY jdk_root "">
       <!ENTITY tjws_src "/home/dmitriy/projects/TJWS2/1.x">
-      <!ENTITY jasper "/home/dmitriy/projects/jasper-7.0.75">
+      <!ENTITY jasper "/home/dmitriy/projects/jasper-7.0.109">
       <!ENTITY fast_scanner "/home/dmitriy/projects/fast-classpath-scanner/lib">
       <!ENTITY keystore "/home/dmitriy/Documents/android-publish.keystore">
       <!ENTITY sdklib_custom "/home/dmitriy/projects/sdklib/build">
@@ -274,11 +274,11 @@
        <value>&tjws_src;/lib/war.jar</value>
        <value variable="PATH SEPARATOR"/>
        <value>&tjws_src;/lib/wskt.jar</value>
-       <!--value variable="PATH SEPARATOR"/>
-       <value  type="repo_artifact">maven:javax.servlet:javax.servlet-api:3.1.0</value-->
+       <value variable="PATH SEPARATOR"/>
+       <!--value  type="repo_artifact">maven:javax.servlet:javax.servlet-api:3.1.0</value>
        <value variable="PATH SEPARATOR"/>
        <value type="repo_artifact">maven:javax.websocket:javax.websocket-api:1.1</value>
-       <value variable="PATH SEPARATOR"/>
+       <value variable="PATH SEPARATOR"/-->
        <value>&jasper;/build/jasper.jar</value>
        <value variable="PATH SEPARATOR"/>
        <value>&fast_scanner;/class-scanner.jar</value>
@@ -441,10 +441,6 @@
              <value>/META-INF</value>
          </operator>
      </expression>
-     <!--function name="zip">
-         <parameter value="Atjeews.apk.link"/>
-         <parameter variable="meta-inf dir"/>
-     </function-->
      
      <expression name="tools path">
         <function name="scalar">
@@ -472,40 +468,28 @@
          <parameter value="-rf"/>
          <parameter variable="unpacked apk"/>
      </task>
-     
-     <expression name = "apk align">
-         <operator name="append">
-             <value variable="apk file"/>
-             <value>.align</value>
-         </operator>
-     </expression>
+
      <task exec="&android_sdk;/build-tools/&build_tool;/zipalign" path="&android_sdk;/build-tools/&build_tool;">
           <parameter>-v</parameter>
           <parameter>4</parameter>
           <parameter variable="Atjeews.apk.unaligned"/>
-          <parameter variable="apk align"/>  
+          <parameter value="${apk file}.align"/>  
       </task>
+     
       <task exec="&android_sdk;/build-tools/&build_tool;/apksigner" path="&android_sdk;/build-tools/&build_tool;">
           <parameter>sign</parameter>
-          
           <parameter>-ks</parameter>
           <parameter>&keystore;</parameter>
-          <parameter variable="apk align"/>
+          <parameter value="${apk file}.align"/>
           
      </task>
       <function name="rm">
          <parameter variable="Atjeews.apk.unaligned"/>
          <parameter variable="Atjeews.apk.link"/>
       </function>
-      <expression name="apk file">
-         <operator name="append">
-             <value variable="apk file"/>
-             <value>.apk</value>
-          </operator>
-     </expression>
      <function name="mv">
-         <parameter variable="apk align"/>
-         <parameter variable="apk file"/>
+         <parameter value="${apk file}.align"/>
+         <parameter value="${apk file}.apk"/>
      </function> 
      <echo>Done.</echo>
      </block>

@@ -64,7 +64,7 @@ public class Config {
 	public int backlog;
 	
 	protected void store(Context context) {
-		SharedPreferences prefs = context.getSharedPreferences(Main.APP_NAME, Context.MODE_WORLD_READABLE);
+		SharedPreferences prefs = context.getSharedPreferences(Main.APP_NAME, Context.MODE_PRIVATE);
 		SharedPreferences.Editor editor = prefs.edit();
 		editor.putBoolean("log_enable", logEnabled);
 		editor.putBoolean(P_SSL, ssl);
@@ -127,7 +127,7 @@ public class Config {
 	}
 	
 	protected void setTV(Context context, boolean on) {
-	    SharedPreferences prefs = context.getSharedPreferences(Main.APP_NAME, Context.MODE_WORLD_READABLE);
+	    SharedPreferences prefs = context.getSharedPreferences(Main.APP_NAME, Context.MODE_PRIVATE);
 		SharedPreferences.Editor editor = prefs.edit();
 		editor.putBoolean(P_TV_DEVICE, on);
 		editor.commit(); // apply();

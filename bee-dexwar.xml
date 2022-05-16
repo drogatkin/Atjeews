@@ -2,7 +2,7 @@
 <!DOCTYPE bee PUBLIC "-//Dmitriy Rogatkin//DTD Bee Project Builder 1.0//EN"
     "https://raw.githubusercontent.com/drogatkin/7Bee/master/bee.dtd" [
       <!ENTITY android_sdk "/home/dmitriy/Android/Sdk">
-      <!ENTITY jasper_lib "/home/dmitriy/projects/jasper-7.0.75/build/jasper.jar">
+      <!ENTITY jasper_lib "/home/dmitriy/projects/jasper-7.0.109/build/jasper.jar">
       <!ENTITY servlet_lib "maven:javax.servlet:javax.servlet-api:3.1.0">
       <!ENTITY tjws_wskt_lib "/home/dmitriy/projects/TJWS2/1.x/lib/wskt.jar">
       <!ENTITY fast_scan_lib "/home/dmitriy/projects/fast-classpath-scanner/lib/class-scanner.jar">
@@ -38,8 +38,8 @@
     <expression name="jasper path">
         <operator name="append">
             <value>&jasper_lib;</value>
-            <value name="path.separator" type="property"/>
-            <value>&servlet_lib;</value>
+            <!--value name="path.separator" type="property"/>
+            <value>&servlet_lib;</value-->
             <value name="path.separator" type="property"/>
             <value variable="JAVA_HOME"/>
             <value>/lib/tools.jar</value>
@@ -299,7 +299,7 @@
                   <value name="path.separator" type="property"/> 
                   <value>&fast_scan_lib;</value>
                   <value name="path.separator" type="property"/>
-                  <value type="repo_artifact">maven:javax.websocket:javax.websocket-api:1.1</value>
+                  <value variable="&jasper_lib;"></value>
                </operator>
             </expression>
             <echo>Processing server endpoints</echo>

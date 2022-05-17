@@ -85,7 +85,7 @@
                             <echo variable="clean dir*"/>
                             <interrupt/>
                         </else>
-                    </if>  
+                    </if>
        </block>
      </target>
      <target name="create dirs">
@@ -99,17 +99,6 @@
      <expression variable="src">
       <operator name="append">
          <value type="path">src</value>
-      </operator>
-     </expression>
-     <expression variable="src path">
-      <operator name="append">
-         <value type="path">src/rogatkin/.java</value>
-         <!--function name="cropname">
-            <parameter value="/rogatkin"/>
-            <parameter value="\."/>
-            <parameter value="/"/>
-            <parameter value="a"/>
-         </function-->
       </operator>
      </expression>
      <expression variable="idl file">
@@ -192,6 +181,7 @@
 	       <echo>Cleaning the build directory</echo>
 	       <function name="rm">
 		  <parameter value="&build_directory;/*/*/*/*/*"/>
+		  <parameter value="&build_directory;/${apk file}.jar"/>
 	       </function>
 	  </else>
         </if>
@@ -201,15 +191,6 @@
       <value name="path.separator" type="property"/>
   </expression>
      <variable name="PROJECT_HOME" type="path">.</variable>
-     <!-- this is incorrect because doesn't count R class correctly -->
-     <expression variable="java sources">
-        <function name="newerwithdependency">
-           <parameter variable="src path"/>
-           <parameter value="&build_directory;/rogatkin/.class"/>
-	   <parameter/>
-	   <parameter value="rogatkin"/>
-        </function>
-     </expression>
      
      <expression variable="R file">
         <operator name="append">
@@ -226,11 +207,12 @@
     <!-- TODO simply add content of directory gen --> 
      <expression variable="java sources">
         <operator name="array">
-           <value variable="java sources"/>
+           <value value="src/rogatkin/mobile/web/*.java" type="file"/>
            <value variable="R file"/>
            <value variable="IDL java file"/>
         </operator>
      </expression>
+     <!--echo>all java - ${java sources}</echo-->
       <variable name="JAVA_HOME"/>
       <expression variable="JAVA_HOME">
       <if>
@@ -263,8 +245,7 @@
   </expression> 
   <expression variable="javac">
      <operator name="append">
-        <value variable="JAVA_HOME"/>
-        <value>/bin/javac</value>
+        <value value="${JAVA_HOME}/bin/javac"/>
      </operator>
   </expression>
    <expression variable="CUSTOM CP">
@@ -287,17 +268,12 @@
 
   <expression variable="class path">
      <operator name="append">
-        <!--value>&android_sdk;/platforms/android-&target;/android.jar</value>
-        <value variable="PATH SEPARATOR"/-->
-        <value variable="PROJECT_HOME"/>
-        <value>/&build_directory;/atjeews.jar</value>
-        <value variable="PATH SEPARATOR"/>
         <value variable="CUSTOM CP"/>
      </operator>
   </expression>
   
   <variable name="comp target">1.8</variable>
-  
+  <echo>Sources: ${java sources,,} and cp ${class path}</echo>
   <target name="compile" dir="PROJECT_HOME">
     <dependency target="check build"/>
     <dependency variable="java sources"/>
@@ -312,7 +288,7 @@
        <parameter value="-target"/>
        <parameter variable="comp target"/>
        <parameter value="-d"/>
-       <parameter value="&build_directory;" type="dir"/>
+       <parameter value="&build_directory;"/>
        <parameter variable="java sources"/>
       <onexit>
         <if>
@@ -339,17 +315,17 @@
     </task>
   </target> 
   <target name="jar">
-    <echo>Jarring...</echo>
+    <echo>Jarring ${apk file}...</echo>
     <dependency target="compile"/>
     <task name="jar_do" code="sun.tools.jar.Main" tool="jar">
        <parameter>-cf</parameter>
-       <parameter value="&build_directory;/atjeews.jar" type="file"/>
+       <parameter value="&build_directory;/${apk file}.jar"/>
        <parameter value="-C"/>
-       <parameter value="&build_directory;" type="dir"/>
-       <parameter value="rogatkin" type="dir"/>
+       <parameter value="&build_directory;"/>
+       <parameter value="rogatkin"/>
       <onexception>
 	<block>
-                 <echo>Exception at jarring</echo>
+                 <echo>Exception at jarring ${apk file}.jar</echo>
                  <function name="stop">
 			<parameter value="-1"/>
                  </function>
@@ -360,8 +336,6 @@
   <expression name="dex lib">
      <operator name="append">
          <value variable="apk tmp dir"/>
-         <!--value>/</value>
-         <value>classes.dex</value-->
      </operator>
   </expression>
   <variable name="jar names"/>
@@ -374,15 +348,12 @@
          </operator>
          </expression>
      </for>
+     <operator name="array">
+            <value variable="jar names"/>
+            <value value="&build_directory;/${apk file}.jar"/>
+     </operator>
   </expression>       
-  <!--expression name="jar names">
-     <function name="cropname">
-        <parameter variable="class path"/>
-        <parameter variable="PATH SEPARATOR"/>
-        <parameter> </parameter>
-        <parameter>true</parameter>
-     </function>
-  </expression-->
+<echo>Jars ${jar names}</echo>
 
   <variable name="dx8 path">&android_sdk;/build-tools/&build_tool;/lib/d8.jar</variable>
   
@@ -395,8 +366,6 @@
                             <parameter value="--output"/>>
                             <parameter  variable="dex lib"/>
                             <parameter variable="jar names"/>
-                            <!--parameter>/home/dmitriy/projects/TJWS2/1.x/lib/webserver.jar</parameter>
-                            <parameter>/home/dmitriy/projects/TJWS2/1.x/lib/wskt.jar</parameter-->
       </task> 
   </target> 
   

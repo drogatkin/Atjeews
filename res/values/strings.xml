@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Atjeews</string>
-    <string name="title">Atjeews - Web Container for Android</string>
+    <string name="title">Atjeews - TJWS for Android</string>
     <string name="enable_server">Enable Server</string>
-    <string name="web_app_url">Deploying Web application URL</string>
+    <string name="web_app_url">Web application package URL</string>
     <string name="http_prfx">https://</string>
     <string name="deploy">Deploy</string>
     <string name="list_deployed">Deployed web apps</string>
@@ -22,8 +22,7 @@
     <string name="t_error">Error</string>
     <string name="alrt_problem">Problem happened %s</string>
     <string name="enable_log">Enable logging</string>
-    <string name="version_info">1.40</string>
-    <string name="app_version">1.40</string>
+
     <string name="enable_ssl">SSL</string>
     <string name="at_port">"@"</string>
 </resources>

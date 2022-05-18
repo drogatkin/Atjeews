@@ -43,7 +43,6 @@ public class Config {
 	
 	static final String P_TV_DEVICE = "tv_run";
 
-	public String app_version;
 	public InetAddress iadr;
 	public int port;
 	public boolean ssl;
@@ -98,7 +97,6 @@ public class Config {
 	}
 	
 	protected void load(Context context) {
-		app_version = context.getString(R.string.app_version);
 		SharedPreferences prefs = context.getSharedPreferences(Main.APP_NAME, Context.MODE_PRIVATE);
 		port = prefs.getInt(P_PORT, 8080);
 		ssl = prefs.getBoolean(P_SSL, false);

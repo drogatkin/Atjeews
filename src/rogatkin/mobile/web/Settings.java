@@ -6,6 +6,8 @@ package rogatkin.mobile.web;
 
 import android.os.RemoteException;
 import android.util.Log;
+import android.content.Context ;
+import android.content.pm.PackageManager.NameNotFoundException ;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -114,7 +116,13 @@ public class Settings extends HttpServlet {
 			pw.print("\",\"server_version\":\"");
 			pw.print(Serve.Identification.serverVersion.substring(Serve.Identification.serverVersion.indexOf(' ')+1));
 			pw.print("\",\"atjeews\":\"");
-			pw.print(atjeews.config.app_version);
+			Context context = (Context)getServletContext().getAttribute("##RuntimeEnv");
+			if (context != null)
+				try {
+					pw.print(context.getPackageManager()
+    .getPackageInfo(context.getPackageName(), 0).versionName);
+    				} catch(NameNotFoundException nnf) {
+    				}
 			pw.print("\"}");
 			pw.close();
 			return;

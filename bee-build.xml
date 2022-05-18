@@ -10,7 +10,7 @@
       <!ENTITY sdklib_custom "/home/dmitriy/projects/sdklib/build">
       <!ENTITY target "32">
       <!ENTITY min_sdk "6">
-      <!ENTITY version_name "1.4">
+      <!ENTITY version_name "1.40">
       <!ENTITY version_code "19">
       <!ENTITY build_tool "30.0.3">
       <!ENTITY build_directory "build">
@@ -156,6 +156,8 @@
              <parameter>AndroidManifest.xml</parameter>
              <parameter>--version-code</parameter>
              <parameter>&version_code;</parameter>
+             <parameter>--version-name</parameter>
+             <parameter>&version_name;</parameter>
              <parameter value="-v"/>
          </task>
      </target>
@@ -204,7 +206,7 @@
            <value>/rogatkin/mobile/web/RCServ.java</value>
         </operator>
      </expression>
-    <!-- TODO simply add content of directory gen --> 
+     
      <expression variable="java sources">
         <operator name="array">
            <value value="src/rogatkin/mobile/web/*.java" type="file"/>
@@ -212,7 +214,7 @@
            <value variable="IDL java file"/>
         </operator>
      </expression>
-     <!--echo>all java - ${java sources}</echo-->
+     
       <variable name="JAVA_HOME"/>
       <expression variable="JAVA_HOME">
       <if>
@@ -353,28 +355,20 @@
             <value value="&build_directory;/${apk file}.jar"/>
      </operator>
   </expression>       
-<echo>Jars ${jar names}</echo>
 
   <variable name="dx8 path">&android_sdk;/build-tools/&build_tool;/lib/d8.jar</variable>
   
   <target name="d8">
       <dependency target="jar"/>
       <task name="d8_do" code="com.android.tools.r8.D8" path="dx8 path"> <!-- without dex com.android.dx.command.dexer.Main  -->
-                            <parameter value="--lib"/>
-                            <parameter value="&android_sdk;/platforms/android-&target;/android.jar"/>
-                            <parameter value="--release"/>
-                            <parameter value="--output"/>>
-                            <parameter  variable="dex lib"/>
-                            <parameter variable="jar names"/>
+            <parameter value="--lib"/>
+            <parameter value="&android_sdk;/platforms/android-&target;/android.jar"/>
+            <parameter value="--release"/>
+            <parameter value="--output"/>>
+            <parameter variable="dex lib"/>
+            <parameter variable="jar names"/>
       </task> 
   </target> 
-  
-  <expression variable="classes dex">
-     <operator name="append">
-       <value variable="dex lib"/>
-       <value>/classes.dex</value>
-     </operator>
-   </expression>
   
      <target name="complete" dir=".">
       <dependency target="d8"/>
@@ -388,9 +382,6 @@
              <value>/*/*/*/*/*/*/*/*/*/*/*/*/*/*</value>
          </operator>
      </expression>
-     <!--function name="rm">
-         <parameter variable="unpacked apk wc"/>
-     </function-->
      <for variable="apk file" in="class path" separator="PATH SEPARATOR">
         <block>
         <function name="unzip">
@@ -404,24 +395,10 @@
         </function> 
         </block>
      </for>
-     <expression name="meta-inf dir">
-         <operator name="append">
-             <value variable="unpacked apk"/>
-             <value>/META-INF</value>
-         </operator>
-     </expression>
      
-     <expression name="tools path">
-        <function name="scalar">
-           <parameter value="&android_sdk;/tools/lib/*.jar" type="file"/>
-           <parameter name="path.separator" type="property"/>
-        </function>   
-     </expression>
      <expression name="custom tools path">
         <operator name="append">
            <value value="&sdklib_custom;/android-build.jar"/>
-           <value name="path.separator" type="property"/>
-           <value variable="-tools path"/>
         </operator>   
      </expression>
      <!-- Note: the builder is patched to populate META-INF/... correctly 
@@ -433,7 +410,7 @@
          <parameter value="-z"/>
          <parameter value="Atjeews.apk.link"/>
          <parameter value="-f"/>
-         <parameter variable="classes dex"></parameter>
+         <parameter value="${dex lib}/classes.dex"></parameter>
          <parameter value="-rf"/>
          <parameter variable="unpacked apk"/>
      </task>

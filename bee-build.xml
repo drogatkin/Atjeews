@@ -5,6 +5,7 @@
       <!ENTITY jdk_root "">
       <!ENTITY tjws_src "/home/dmitriy/projects/TJWS2/1.x">
       <!ENTITY jasper "/home/dmitriy/projects/jasper-7.0.109">
+      <!ENTITY websoketx "no">
       <!ENTITY fast_scanner "/home/dmitriy/projects/fast-classpath-scanner/lib">
       <!ENTITY keystore "/home/dmitriy/Documents/android-publish.keystore">
       <!ENTITY sdklib_custom "/home/dmitriy/projects/sdklib/build">
@@ -100,10 +101,6 @@
       <operator name="append">
          <value type="path">src</value>
       </operator>
-     </expression>
-     <expression variable="idl file">
-        <operator name="append">
-        </operator>
      </expression>
      <variable name="empty str">
 </variable>
@@ -250,7 +247,7 @@
         <value value="${JAVA_HOME}/bin/javac"/>
      </operator>
   </expression>
-   <expression variable="CUSTOM CP">
+  <expression variable="CUSTOM CP">
     <operator name="append">
        <value>&tjws_src;/lib/webserver.jar</value>
        <value variable="PATH SEPARATOR"/>
@@ -258,16 +255,30 @@
        <value variable="PATH SEPARATOR"/>
        <value>&tjws_src;/lib/wskt.jar</value>
        <value variable="PATH SEPARATOR"/>
-       <!--value  type="repo_artifact">maven:javax.servlet:javax.servlet-api:3.1.0</value>
-       <value variable="PATH SEPARATOR"/>
-       <value type="repo_artifact">maven:javax.websocket:javax.websocket-api:1.1</value>
-       <value variable="PATH SEPARATOR"/-->
        <value>&jasper;/build/jasper.jar</value>
        <value variable="PATH SEPARATOR"/>
        <value>&fast_scanner;/class-scanner.jar</value>
     </operator>
   </expression>
-
+  <expression variable="CUSTOM CP">
+	  <if>
+	     <expression>
+		 <operator name="eq">
+		    <value>&websoketx;</value>
+		    <value>yes</value>
+		</operator>
+	     </expression>
+	     <then>
+		   <operator name="append">
+		      <value>${CUSTOM CP}${PATH SEPARATOR}</value>
+		      <value type="repo_artifact">maven:javax.websocket:javax.websocket-api:1.1</value>
+		   </operator>
+	     </then>
+	     <else>
+	        <value variable="CUSTOM CP"/>
+	     </else>
+	  </if>
+  </expression>
   <expression variable="class path">
      <operator name="append">
         <value variable="CUSTOM CP"/>

@@ -20,9 +20,8 @@
     <string name="t_warning">Warning</string>
     <string name="rescan">Rescan Apps</string>
     <string name="t_error">Error</string>
-    <string name="alrt_problem">Problem happened %s</string>
-    <string name="enable_log">Enable logging</string>
-
+    <string name="alrt_problem">Problem %s happened</string>
+    <string name="enable_log">Access log</string>
     <string name="enable_ssl">SSL</string>
     <string name="at_port">"@"</string>
 </resources>

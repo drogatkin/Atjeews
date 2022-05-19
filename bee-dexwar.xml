@@ -3,7 +3,7 @@
     "https://raw.githubusercontent.com/drogatkin/7Bee/master/bee.dtd" [
       <!ENTITY android_sdk "/home/dmitriy/Android/Sdk">
       <!ENTITY jasper_lib "/home/dmitriy/projects/jasper-7.0.109/build/jasper.jar">
-      <!ENTITY servlet_lib "maven:javax.servlet:javax.servlet-api:3.1.0">
+      <!ENTITY websoketx "no">
       <!ENTITY tjws_wskt_lib "/home/dmitriy/projects/TJWS2/1.x/lib/wskt.jar">
       <!ENTITY fast_scan_lib "/home/dmitriy/projects/fast-classpath-scanner/lib/class-scanner.jar">
       <!ENTITY target "30">
@@ -38,8 +38,6 @@
     <expression name="jasper path">
         <operator name="append">
             <value>&jasper_lib;</value>
-            <!--value name="path.separator" type="property"/>
-            <value>&servlet_lib;</value-->
             <value name="path.separator" type="property"/>
             <value variable="JAVA_HOME"/>
             <value>/lib/tools.jar</value>
@@ -302,8 +300,28 @@
                   <value variable="&jasper_lib;"></value>
                </operator>
             </expression>
-            <echo>Processing server endpoints</echo>
-            <echo variable="scanner path"/>
+            <expression name="scanner path">
+               <if>
+		     <expression>
+			 <operator name="eq">
+			    <value>&websoketx;</value>
+			    <value>yes</value>
+			</operator>
+		     </expression>
+		     <then>
+			   <operator name="append">
+			      <value variable="scanner path"/>
+			      <value>${scanner path}</value>
+			      <value name="path.separator" type="property"/>
+			      <value type="repo_artifact">maven:javax.websocket:javax.websocket-api:1.1</value>
+			   </operator>
+		     </then>
+		     <else>
+	      		  <value variable="scanner path"/>
+	    	     </else>
+	 	 </if>
+            </expression>
+            <echo>Processing server endpoints (cp: ${scanner path})</echo>
             <task name="scan" code="rogatkin.wskt.EndPointScanner" path="scanner path">
                 <parameter variable="web-inf"/>
                 <parameter variable="ws-info"/>
@@ -363,12 +381,12 @@
                             <value>/*</value>
                         </operator>
                     </expression>
-                    <echo>Zipping JSP classes</echo>
+                    <echo>Zipping JSP classes in ${jsp dir}</echo>
                     <function name="zip">
                         <parameter variable="jsp jar"/>
                         <parameter variable="jsp dir" type="file"/>
                     </function>
-                    <!-- keep JSP .class files here to make JSP engine think they are actual -->                    
+                    <!-- keep JSP .class files here to make JSP engine to think they are actual -->                    
                 </then>
                 <else>
                     <echo>No JSP</echo>
@@ -406,7 +424,7 @@
                     <value>/allclasses.jar</value>
                 </operator>
             </expression>
-            <echo variable="all jars"/>
+            <echo value="Doing d8 of ${all jars}"/>
             <if>
                 <expression>
                     <operator name="neq">

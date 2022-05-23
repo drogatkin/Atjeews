@@ -178,6 +178,7 @@ public class TJWSServ extends Service {
 			.setContentTitle("Atjeews server")
 			.setPriority(NotificationManager.IMPORTANCE_MIN)
 			.setCategory(Notification.CATEGORY_SERVICE)
+			//.addAction(R.drawable.button_onoff_indicator_on, getString(R.string.srv_ctrl), startStopIntent);
 			.build();
 			startForeground(2, notification);
 		}
@@ -196,6 +197,8 @@ public class TJWSServ extends Service {
 				public void run() {
 					status = ST_RUN;
 					int code = 0;
+					if (logStream == null)
+						initLogging();
 					if (wifiLock == null) {
 						WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 						wifiLock = wifiManager.createWifiLock(SERVICE_NAME);
@@ -212,6 +215,8 @@ public class TJWSServ extends Service {
 						if (wifiLock != null && wifiLock.isHeld())
 							wifiLock.release();
 						status = code == 0 ? ST_STOP : ST_ERR;
+						logStream.close();
+						logStream = null;
 						// TODO find out how notify client
 					}
 				}
@@ -261,8 +266,10 @@ public class TJWSServ extends Service {
 	}
 
 	@SuppressLint("NewApi") protected void initLogging() {
-		if (logStream != null)
-			return;
+		if (logStream != null) {
+			logStream.close();
+			logStream = null;
+		}
 		File logDir = new File(protectedFS ? getExternalCacheDir()
 				: Environment.getExternalStorageDirectory(), LOGDIR);
 		if (Main.DEBUG)
@@ -278,8 +285,11 @@ public class TJWSServ extends Service {
 		}
 		if (logStream == null)
 			logStream = System.out;
-		else
+		else {
 			System.setErr(logStream);
+			System.setOut(logStream);
+		}
+			
 	}
 
 	protected void initDeployDirectory() {

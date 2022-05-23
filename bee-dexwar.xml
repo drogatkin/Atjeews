@@ -2,7 +2,7 @@
 <!DOCTYPE bee PUBLIC "-//Dmitriy Rogatkin//DTD Bee Project Builder 1.0//EN"
     "https://raw.githubusercontent.com/drogatkin/7Bee/master/bee.dtd" [
       <!ENTITY android_sdk "/home/dmitriy/Android/Sdk">
-      <!ENTITY jasper_lib "/home/dmitriy/projects/jasper-7.0.109/build/jasper.jar">
+      <!ENTITY jasper_lib "/home/dmitriy/projects/jasper-8.5.78/build/jasper.jar">
       <!ENTITY websoketx "no">
       <!ENTITY tjws_wskt_lib "/home/dmitriy/projects/TJWS2/1.x/lib/wskt.jar">
       <!ENTITY fast_scan_lib "/home/dmitriy/projects/fast-classpath-scanner/lib/class-scanner.jar">

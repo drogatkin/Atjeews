@@ -4,7 +4,7 @@
       <!ENTITY android_sdk "/home/dmitriy/Android/Sdk">
       <!ENTITY jdk_root "">
       <!ENTITY tjws_src "/home/dmitriy/projects/TJWS2/1.x">
-      <!ENTITY jasper "/home/dmitriy/projects/jasper-7.0.109">
+      <!ENTITY jasper "/home/dmitriy/projects/jasper-8.5.78">
       <!ENTITY websoketx "no">
       <!ENTITY fast_scanner "/home/dmitriy/projects/fast-classpath-scanner/lib">
       <!ENTITY keystore "/home/dmitriy/Documents/android-publish.keystore">
@@ -403,6 +403,7 @@
             <parameter>./*.xsd</parameter>
             <parameter>./*.MF</parameter>
             <parameter>./*Configurator</parameter> <!-- /resources/META-INF/services/javax.websocket.server.ServerEndpointConfig$Configurator -->
+            <parameter>./javax.*</parameter>
         </function> 
         </block>
      </for>

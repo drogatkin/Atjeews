@@ -61,7 +61,7 @@
                     </operator>
                 </expression>
                 <then>
-                    <echo>Jasper lib (jar) not found please check script ENTITY jasper_lib, itspecified currently as: &jasper_lib;</echo>
+                    <echo>Jasper (&jasper_lib;) not found, please check the script ENTITY jasper_lib</echo>
                     <function name="stop">
                         <parameter>-1</parameter>
                     </function>
@@ -166,7 +166,7 @@
                     </operator>
                 </expression>
                 <then>
-                    <echo>Cleaning working folder</echo>
+                    <echo>Cleaning ${unwar dir} folder</echo>
                     <expression name="unwar dir *">
                         <operator name="append">
                             <value variable="unwar dir"/>
@@ -180,7 +180,7 @@
                             </function>
                         </expression>
                         <else>
-                            <echo>Can not clean working directory ${unwar dir *}, please do it manually and restart the script</echo>
+                            <echo>Can not clean the working directory ${unwar dir *}, please do it manually and restart the script</echo>
                             <interrupt/>
                         </else>
                     </if>  
@@ -438,6 +438,8 @@
 		        <task name="d8_do" code="com.android.tools.r8.D8" path="d8 path">
 		            <parameter>--lib</parameter>
 		            <parameter>&android_sdk;/platforms/android-&target;/android.jar</parameter>
+		            <parameter>--classpath</parameter>
+		            <parameter>&jasper_lib;</parameter>
 		            <parameter value="--release"/>
 		            <parameter value="--output"/>
 		            <parameter variable="dex lib"/>

@@ -26,11 +26,11 @@ target remove_old {
      dependency {true}
     {
         display(Cleaning the working folder)
-        exec rm (-r,${apk tmp dir}/*)
+        exec rm (-r,${apk tmp dir}/)
         if {
          neq(${~~}, 0)
          then {
-            panic("Can not clean the working directory, please do it manually and restart the script")
+            display("Can not clean the working directory, please do it manually and restart the script")
          }
        }
     }
@@ -39,7 +39,7 @@ apk gen dir=${tmpdir}/apk_temp/gen
 target "create dirs" {
         dependency {target(remove_old)}
        {
-           exec mkdir(${apk gen dir})
+           exec mkdir(-p, ${apk gen dir})
        }
 }
 
@@ -71,9 +71,11 @@ target "pack_res"{
 target "link_res"{
        dependency {target("pack_res")}
       {
+         newerthan(${apk gen dir}/.flat)
+         assign(apk gen file,~~)
          exec "aapt2"(
              link,
-             ${apk gen dir}/*.flat,
+             apk gen file,
              --java,
              ${apk gen dir},
              -I, 
@@ -201,7 +203,7 @@ target complete{
          -z,
          Atjeews.apk.link,
          -f,
-         ${dex lib}/classes.dex,
+         ${apk tmp dir}/classes.dex,
          -rf,
          unpacked apk)
 

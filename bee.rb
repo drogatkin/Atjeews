@@ -174,19 +174,20 @@ target d8{
    }
 }
 
+unpacked apk=${apk tmp dir}/${apk file}.apk
+
 target complete{
       dependency{ target(d8)}
       {
          exec mkdir(unpacked apk)
      
-     for apk file:CUSTOM CP {
+     for zip file:CUSTOM CP {
         exec unzip(
-            apk file,
+            zip file,
             *.properties,
             *.dtd,
             *.xsd,
-            *.MF,
-            /resources/META-INF/services/javax.websocket.server.ServerEndpointConfig$Configurator,
+            META-INF/services/javax.websocket.server.ServerEndpointConfig$Configurator,
             javax.*,
             -d,
             unpacked apk)
@@ -206,20 +207,44 @@ target complete{
          ${apk tmp dir}/classes.dex,
          -rf,
          unpacked apk)
+         if {
+            neq(${~~}, 0)
+            then {
+              panic("apk building error(s)")
+           }
+        }
 
+        assign(apk dir,${~cwd~})
         assign(tool dir,${android_sdk}/build-tools/${build_tool})
+        assign(zipalign, ${tool dir}/zipalign)
 
-        exec zipalign:tool dir(
+       # exec ./zipalign:tool dir(
+        exec zipalign(
          -v,
+         -f,
           4,
-          Atjeews.apk.unaligned,
-          ${apk file}.align) 
-   
-      exec apksigner:tool dir(
+          ${apk dir}/Atjeews.apk.unaligned,
+          ${apk dir}/${apk file}.align) 
+         if {
+            neq(${~~}, 0)
+            then {
+              panic("zip aligning error(s)")
+           }
+        }
+
+      assign(apksigner, ${tool dir}/apksigner)
+
+      exec apksigner(
           sign,
           -ks,
           ${keystore},
-          ${apk file}.align)
+          ${apk dir}/${apk file}.align)
+         if {
+            neq(${~~}, 0)
+            then {
+              panic("apk signing error(s)")
+           }
+        }
 
       exec rm(
          Atjeews.apk.unaligned,

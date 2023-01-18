@@ -216,10 +216,8 @@ target complete{
 
         assign(apk dir,${~cwd~})
         assign(tool dir,${android_sdk}/build-tools/${build_tool})
-        assign(zipalign, ${tool dir}/zipalign)
 
-       # exec ./zipalign:tool dir(
-        exec zipalign(
+        exec ./zipalign:tool dir(
          -v,
          -f,
           4,
@@ -232,9 +230,7 @@ target complete{
            }
         }
 
-      assign(apksigner, ${tool dir}/apksigner)
-
-      exec apksigner(
+      exec ./apksigner:tool dir(
           sign,
           -ks,
           ${keystore},

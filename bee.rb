@@ -188,7 +188,7 @@ target complete{
             *.dtd,
             *.xsd,
             META-INF/services/javax.websocket.server.ServerEndpointConfig$Configurator,
-            javax.*,
+            *.ServletContainerInitializer,
             -d,
             unpacked apk)
      }

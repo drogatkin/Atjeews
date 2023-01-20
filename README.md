@@ -11,9 +11,10 @@ The current implementation requires Android build tool patch. The patch content 
 in "build-tool" directory. The complete source to patch can be taken from https://github.com/miracle2k/android-platform_sdk
 
 ## How to build
-There are two options, either use [7Bee]https://github.com/drogatkin/7Bee Java build tool
+There are two options, either use [7Bee](https://github.com/drogatkin/7Bee) Java build tool
 or [RustBee](https://github.com/drogatkin/rust_utilities)  Linux build tool. bee-build.xml or bee.rb has to be edited to provide
-a correct location of used components.
+a correct location of used components. It is also possible to move the project under Android Studio and use Gradle. But, there
+is a risk that websocket won't work correctly due a bug in Gradle.
 
 7Bee provides also bee-dexwar.xml script for auto converting "war" files in Android format.
 

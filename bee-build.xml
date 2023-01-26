@@ -9,14 +9,14 @@
       <!ENTITY fast_scanner "/home/dmitriy/projects/fast-classpath-scanner/lib">
       <!ENTITY keystore "/home/dmitriy/Documents/android-publish.keystore">
       <!ENTITY sdklib_custom "/home/dmitriy/projects/sdklib/build">
-      <!ENTITY target "32">
+      <!ENTITY target "33">
       <!ENTITY min_sdk "6">
-      <!ENTITY version_name "1.46">
-      <!ENTITY version_code "21">
+      <!ENTITY version_name "1.47">
+      <!ENTITY version_code "22">
       <!ENTITY build_tool "30.0.3">
       <!ENTITY build_directory "build">
 ]>
-<!-- Build Atjeews Copyright 2022 (c) Dmitriy Rogatkin 
+<!-- Build Atjeews Copyright 2023 (c) Dmitriy Rogatkin 
      ref: https://github.com/2BAB/BuildingAndroidAppManually/blob/master/build.sh -->
 <bee name="apk-packaging" type="script">
      <expression name="apk tmp dir" >

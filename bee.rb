@@ -1,6 +1,6 @@
 # the build script is for building Atjeews
 
-android_sdk ="/home/dmitriy/Android/Sdk">
+android_sdk ="/home/dmitriy/Android/Sdk"
 jdk_root =""
 tjws_src ="/home/dmitriy/projects/TJWS2/1.x"
 jasper ="/home/dmitriy/projects/jasper-8.5.78"

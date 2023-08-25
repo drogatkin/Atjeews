@@ -43,6 +43,8 @@ import android.os.Environment;
 import android.provider.Settings;
 import android.content.res.Configuration;
 import android.app.UiModeManager;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 
 import rogatkin.web.WebApp;
 
@@ -208,6 +210,21 @@ public class Main extends Activity {
 		//updateUI();
 	}
 	
+	boolean checkAllFilesPermission() {
+        try {
+            PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), PackageManager.GET_PERMISSIONS);
+            if (pi.requestedPermissions == null || pi.requestedPermissions.length == 0)
+                return false;
+            for (String p: pi.requestedPermissions ) {
+                if (p.equals(Manifest.permission.MANAGE_EXTERNAL_STORAGE) )
+                    return true;
+            }
+        } catch (PackageManager.NameNotFoundException nnf) {
+
+        }
+        return false;
+    }
+	
 	public boolean requestPermission(String p) {
 		if (Build.VERSION.SDK_INT >= 23) {
 			if (checkSelfPermission(p)
@@ -219,7 +236,7 @@ public class Main extends Activity {
 					if (Environment.isExternalStorageManager()) {
 						//todo when permission is granted
 						return true;
-					} else {
+					} else if (checkAllFilesPermission()) {
 						//request for the permission
 					//	if (options.fileManagementRequested())
 					//		return true;

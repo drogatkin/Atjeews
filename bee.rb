@@ -15,6 +15,7 @@ version_name ="1.47"
 build_tool ="30.0.3"
  build_directory= "build"
 apk file=atjeews
+playstore list=true
 
 aidl=${android_sdk}/build-tools/${build_tool}/aidl
 aapt2=${android_sdk}/build-tools/${build_tool}/aapt2
@@ -73,6 +74,13 @@ target "link_res"{
       {
          newerthan(${apk gen dir}/.flat)
          assign(apk gen file,~~)
+         assign(manifest file,AndroidManifest-playstore.xml)
+        if {
+          eq(playstore list, false)
+          then {
+             assign(manifest file,AndroidManifest.xml)
+          }
+       }
          exec "aapt2"(
              link,
              apk gen file,
@@ -87,7 +95,7 @@ target "link_res"{
              -o,
              Atjeews.apk.link,
              --manifest, 
-             AndroidManifest.xml,
+             manifest file,
              --version-code,
              ${version_code},
              --version-name,

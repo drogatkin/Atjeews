@@ -3,3 +3,6 @@
 /build
 /.temp_repo
 *.apk
+*.war
+*.idsig
+*.log

@@ -6,7 +6,7 @@
       <!ENTITY websoketx "no">
       <!ENTITY tjws_wskt_lib "/home/dmitriy/projects/TJWS2/1.x/lib/wskt.jar">
       <!ENTITY fast_scan_lib "/home/dmitriy/projects/fast-classpath-scanner/lib/class-scanner.jar">
-      <!ENTITY target "30">
+      <!ENTITY target "33">
       <!ENTITY build_ver "30.0.3">
 ]>
 <!-- Prepare a war file for Android deployment, Copyright 2022 (c) Dmitriy Rogatkin -->
@@ -108,7 +108,25 @@
                     </expression>
                 </then>
             </if>
-            
+            <expression name="java ver">
+    		            <value name="java.vm.specification.version" type="property"/>
+    		        </expression>  
+            <if>
+                <expression>
+          	    	<operator name="neq">
+    		            <value variable="java ver"/>
+    		            <value value="1.8"/>
+                  	</operator>          
+                </expression>
+    		    <then>
+    		        <echo>Java 1.8 is required for dexing .war, current ${java ver}</echo>
+    		        <echo>Please use the Java version for run the 7Bee script</echo>
+    		        <interrupt/>
+    		    </then> 
+    		    <else>
+    		       
+    		    </else>
+            </if>
             <if>
                 <expression>
           		<operator name="neq">

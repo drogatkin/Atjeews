@@ -4,7 +4,7 @@
 Android wrapper for TJWS
 
 ## Current status
-The version of the Atjeews works with the latest Android SDK 33. It tested with TJWS 1.120. 
+The version of the Atjeews works with the latest Android SDK 34. It tested with TJWS 1.121. 
 
 The current implementation requires an Android build tool patch. The patch content is provided
 in [build-tool](https://github.com/drogatkin/Atjeews/tree/master/build-tool) directory. The complete source to patch can be taken from [GitHub](https://github.com/miracle2k/android-platform_sdk).

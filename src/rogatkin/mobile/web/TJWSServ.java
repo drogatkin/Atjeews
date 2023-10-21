@@ -43,6 +43,7 @@ import android.os.Build;
 import android.graphics.Color;
 import android.app.NotificationManager;
 import android.app.NotificationChannel ;
+import android.content.pm.ServiceInfo;
 
 /**
  * Android TJWS server service
@@ -180,7 +181,10 @@ public class TJWSServ extends Service {
 			.setCategory(Notification.CATEGORY_SERVICE)
 			//.addAction(R.drawable.button_onoff_indicator_on, getString(R.string.srv_ctrl), startStopIntent);
 			.build();
-			startForeground(2, notification);
+			if (Build.VERSION.SDK_INT > 33) {
+			    startForeground(2, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
+			} else
+			    startForeground(2, notification);
 		}
 	}
 
@@ -700,6 +704,7 @@ public class TJWSServ extends Service {
 		srv.getDeployer().deployWar(
 				new File(deployDir, appName + WarRoller.DEPLOY_ARCH_EXT),
 				new File(deployDir, WarRoller.DEPLOYMENT_DIR_TARGET));
+		
 		srv.deployApp(appName);
 	}
 
@@ -781,8 +786,6 @@ public class TJWSServ extends Service {
 			try {
 				deployer.deploy(this);
 			} catch (Throwable t) {
-				if (t instanceof ThreadDeath)
-					throw (ThreadDeath) t;
 				if (Main.DEBUG)
 					Log.e(SERVICE_NAME, "Unexpected problem in deploying apps",
 							t);
@@ -799,8 +802,6 @@ public class TJWSServ extends Service {
 						webAppServlet, null);
 				return true;
 			} catch (Throwable t) {
-				if (t instanceof ThreadDeath)
-					throw (ThreadDeath) t;
 				if (Main.DEBUG)
 					Log.e(SERVICE_NAME, "Problem in deployment " + appName, t);
 			}

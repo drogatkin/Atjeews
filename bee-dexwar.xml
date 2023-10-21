@@ -6,10 +6,10 @@
       <!ENTITY websoketx "no">
       <!ENTITY tjws_wskt_lib "/home/dmitriy/projects/TJWS2/1.x/lib/wskt.jar">
       <!ENTITY fast_scan_lib "/home/dmitriy/projects/fast-classpath-scanner/lib/class-scanner.jar">
-      <!ENTITY target "33">
+      <!ENTITY target "34">
       <!ENTITY build_ver "30.0.3">
 ]>
-<!-- Prepare a war file for Android deployment, Copyright 2022 (c) Dmitriy Rogatkin -->
+<!-- Prepare a war file for Android deployment, Copyright 2023 (c) Dmitriy Rogatkin -->
 <bee name="dexer" type="script">
     <variable name="d8 path">&android_sdk;/build-tools/&build_ver;/lib/d8.jar</variable>
     <expression name="jre crop">

@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.Arrays;
 
 import android.util.Log;
+import android.os.Build;
 import dalvik.system.DexClassLoader;
 
 public class AndroidClassLoader extends DexClassLoader {
@@ -23,12 +24,17 @@ public class AndroidClassLoader extends DexClassLoader {
 		String result = "";
 		String sep = System.getProperty("path.separator");
 		for (URL url : urls) {
-			result += url.getPath();
+		    String p = url.getPath();
+		    if (Build.VERSION.SDK_INT >= 34)
+		         new File(p).setReadOnly();
+			result += p;
 			result += sep;
 		}
 		// possibly trim last sep char
-		if (Main.DEBUG)
-			Log.d(Main.APP_NAME, "Class path:" + result);
+		if (Main.DEBUG) {
+			Log.d(Main.APP_NAME, "Class Path: " + result);
+			//Log.e(Main.APP_NAME, "Creation CL" + Arrays.toString(urls), new Exception("CL"));
+		}
 		return result;
 	}
 

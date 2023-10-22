@@ -226,7 +226,7 @@ public class Main extends Activity {
     }
 	
 	public boolean requestPermission(String p) {
-		if (Build.VERSION.SDK_INT >= 23) {
+		if (Build.VERSION.SDK_INT >= 23 && Build.VERSION.SDK_INT < 33) {
 			if (checkSelfPermission(p)
 					== PackageManager.PERMISSION_GRANTED) {
 				if (DEBUG)
@@ -254,6 +254,15 @@ public class Main extends Activity {
 					Log.v(APP_NAME,"Permission "+p+" is revoked1");
 				requestPermissions(new String[]{p}, 3);
 				return false;
+			}
+		} else if (Build.VERSION.SDK_INT >= 33) {
+		    if (Environment.isExternalStorageManager()) {
+				return true;
+			} else if (checkAllFilesPermission()) {
+				Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+				Uri uri = Uri.fromParts("package", getPackageName(), null);
+				intent.setData(uri);
+				startActivity(intent);
 			}
 		}
 		return true;

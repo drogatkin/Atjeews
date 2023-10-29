@@ -8,10 +8,10 @@ websoketx ="false"
 fast_scanner ="/home/dmitriy/projects/fast-classpath-scanner/lib"
 keystore ="/home/dmitriy/Documents/android-publish.keystore"
 sdklib_custom ="/home/dmitriy/projects/sdklib/build"
-target ="33"
+target ="34"
 min_sdk= "6"
-version_name ="1.47"
- version_code ="22"
+version_name ="1.49"
+ version_code ="25"
 build_tool ="30.0.3"
  build_directory= "build"
 apk file=atjeews
@@ -74,13 +74,14 @@ target "link_res"{
       {
          newerthan(${apk gen dir}/.flat)
          assign(apk gen file,~~)
-         assign(manifest file,AndroidManifest-playstore.xml)
+         assign(manifest file,AndroidManifest-playstore.xml)  # -playstore
         if {
           eq(playstore list, false)
           then {
              assign(manifest file,AndroidManifest.xml)
           }
        }
+       display (Manifest ${manifest file})
          exec "aapt2"(
              link,
              apk gen file,

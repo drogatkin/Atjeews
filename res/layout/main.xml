@@ -23,7 +23,7 @@
    </TableRow>
 </TableLayout>
 
-<TextView android:layout_width="wrap_content" android:id="@+id/textView1" android:text="@string/web_app_url" android:layout_height="wrap_content"></TextView>
+<TextView android:layout_width="wrap_content" android:id="@+id/textView1" android:hint="@string/web_app_url" android:layout_height="wrap_content"></TextView>
 <EditText android:layout_width="fill_parent" android:layout_height="wrap_content" android:id="@+id/editText1" android:text="@string/http_prfx" android:inputType="textUri"></EditText>
 <TableLayout android:id="@+id/tableLayout3" android:layout_width="wrap_content" android:layout_height="wrap_content">
   <TableRow>

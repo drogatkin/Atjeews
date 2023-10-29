@@ -11,7 +11,7 @@ in [build-tool](https://github.com/drogatkin/Atjeews/tree/master/build-tool) dir
 
 ## How to build
 There are two options, either use [7Bee](https://github.com/drogatkin/7Bee) Java build tool
-or [RustBee](https://github.com/drogatkin/rust_utilities/tree/master/doc/rustbee)  Linux build tool. bee-build.xml or bee.rb has to be edited to provide
+or [RustBee](https://gitlab.com/tools6772135/rusthub/-/tree/master)  Linux build tool. bee-build.xml or bee.rb has to be edited to provide
 a correct location of used components. It is also possible to move the project under Android Studio and use Gradle. But, there
 is a risk that websocket won't work correctly due a bug in Gradle.
 

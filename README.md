@@ -17,7 +17,7 @@ or [RustBee](https://gitlab.com/tools6772135/rusthub/-/tree/master)  Linux build
 a correct location of used components. It is also possible to move the project under Android Studio and use Gradle. But, there
 is a risk that websocket won't work correctly due a bug in Gradle.
 
-7Bee provides also [bee-dexwar.xml](https://github.com/drogatkin/Atjeews/blob/master/bee-dexwar.xml) script for auto converting *war* files in Android format.
+7Bee provides also [bee-dexwar.xml](https://github.com/drogatkin/Atjeews/blob/master/bee-dexwar.xml) script for auto converting *war* files to the Dalvik format.
 
 ## Known problems
 1. web.xml less deployment doesn't work

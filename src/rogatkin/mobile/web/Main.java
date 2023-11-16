@@ -126,7 +126,7 @@ public class Main extends Activity {
 							builder.setTitle(R.string.t_error);
 							builder.create().show();
 						} else {
-							surl.setText("https://");
+							surl.setText("");
 							try {
 								fillServlets(manageSecretApps(servCtrl.getApps()));
 							} catch (Exception e) {

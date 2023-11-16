@@ -15,7 +15,7 @@ version_name ="1.49"
 build_tool ="30.0.3"
  build_directory= "build"
 apk file=atjeews
-playstore list=true
+playstore list=false
 
 aidl=${android_sdk}/build-tools/${build_tool}/aidl
 aapt2=${android_sdk}/build-tools/${build_tool}/aapt2

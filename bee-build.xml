@@ -9,10 +9,10 @@
       <!ENTITY fast_scanner "/home/dmitriy/projects/fast-classpath-scanner/lib">
       <!ENTITY keystore "/home/dmitriy/Documents/android-publish.keystore">
       <!ENTITY sdklib_custom "/home/dmitriy/projects/sdklib/build">
-      <!ENTITY target "33">
+      <!ENTITY target "34">
       <!ENTITY min_sdk "6">
-      <!ENTITY version_name "1.47">
-      <!ENTITY version_code "22">
+      <!ENTITY version_name "1.50">
+      <!ENTITY version_code "26">
       <!ENTITY build_tool "30.0.3">
       <!ENTITY build_directory "build">
 ]>

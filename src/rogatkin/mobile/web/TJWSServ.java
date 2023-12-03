@@ -44,6 +44,7 @@ import android.graphics.Color;
 import android.app.NotificationManager;
 import android.app.NotificationChannel ;
 import android.content.pm.ServiceInfo;
+import android.app.PendingIntent;
 
 /**
  * Android TJWS server service
@@ -144,9 +145,6 @@ public class TJWSServ extends Service {
 	@Override
         public void onCreate() {
             super.onCreate();
-            if (Build.VERSION.SDK_INT > 25) {
-                startForegroundNew();
-            }
         }
 
 	@Override
@@ -173,12 +171,16 @@ public class TJWSServ extends Service {
 			assert manager != null;
 			manager.createNotificationChannel(chan);
 
+            Intent activityIntent = new Intent(this, Main.class);
 			Notification.Builder notificationBuilder = new Notification.Builder(this, NOTIFICATION_CHANNEL_ID);
 			@SuppressLint("WrongConstant") Notification notification = notificationBuilder.setOngoing(true)
 			//.setSmallIcon(R.drawable.icon_1)
 			.setContentTitle("Atjeews server")
 			.setPriority(NotificationManager.IMPORTANCE_MIN)
 			.setCategory(Notification.CATEGORY_SERVICE)
+			.setContentIntent(PendingIntent.getActivity(this, 0, activityIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE))
+			.setContentText(getString(R.string.title))
+			.setSmallIcon(R.drawable.icon)
 			//.addAction(R.drawable.button_onoff_indicator_on, getString(R.string.srv_ctrl), startStopIntent);
 			.build();
 			if (Build.VERSION.SDK_INT > 33) {
@@ -209,6 +211,7 @@ public class TJWSServ extends Service {
 					}
 					try {
 						wifiLock.acquire();
+                        startForegroundNew();
 						code = srv.serve();
 						if (Main.DEBUG) {
 							Log.d(SERVICE_NAME, "Serve terminated with :"
@@ -221,6 +224,7 @@ public class TJWSServ extends Service {
 						status = code == 0 ? ST_STOP : ST_ERR;
 						logStream.close();
 						logStream = null;
+						stopForeground(true);
 						// TODO find out how notify client
 					}
 				}

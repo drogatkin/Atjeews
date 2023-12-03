@@ -320,7 +320,7 @@ public class Main extends Activity {
 			boolean stopped = servCtrl.getStatus() != TJWSServ.ST_RUN;
 			if (DEBUG)
 				Log.d(APP_NAME, "run "+stopped+", checking run "+startBtn.isChecked());
-			//startBtn.setChecked(!stopped);
+			startBtn.setChecked(!stopped);
 			if (stopped == false && hostName == null)
 				start(servCtrl);
 		} catch (Exception e) {

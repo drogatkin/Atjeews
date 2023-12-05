@@ -74,7 +74,7 @@ target "link_res"{
       {
          newerthan(${apk gen dir}/.flat)
          assign(apk gen file,~~)
-         assign(manifest file,AndroidManifest-playstore.xml)  # -playstore
+         assign(manifest file,AndroidManifest-playstore.xml)
         if {
           eq(playstore list, false)
           then {

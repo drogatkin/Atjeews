@@ -3,7 +3,7 @@
 android_sdk ="/home/dmitriy/Android/Sdk"
 jdk_root =""
 tjws_src ="/home/dmitriy/projects/TJWS2/1.x"
-jasper ="/home/dmitriy/projects/jasper-8.5.78"
+jasper ="/home/dmitriy/projects/jasper-8.5.78"  # for old: jasper-7.0.109 , for new: jasper-8.5.78
 websoketx ="false"
 fast_scanner ="/home/dmitriy/projects/fast-classpath-scanner/lib"
 keystore ="/home/dmitriy/Documents/android-publish.keystore"
@@ -15,7 +15,7 @@ version_name ="1.50"
 build_tool ="30.0.3"
  build_directory= "build"
 apk file=atjeews
-playstore list=true
+playstore list=false
 
 aidl=${android_sdk}/build-tools/${build_tool}/aidl
 aapt2=${android_sdk}/build-tools/${build_tool}/aapt2
@@ -27,13 +27,19 @@ target remove_old {
      dependency {true}
     {
         display(Cleaning the working folder)
-        exec rm (-r,${apk tmp dir}/)
+        exec test(-d,apk tmp dir)
         if {
-         neq(${~~}, 0)
-         then {
-            display("Can not clean the working directory, please do it manually and restart the script")
-         }
+          eq(${~~}, 0)
+          then {
+             exec rm (-rf,${apk tmp dir}/)
+             if {
+               neq(${~~}, 0)
+               then {
+                   display("Can not clean the working directory, please do it manually if needed and restart the script") # can it be panic() ?
+              }
+           }
        }
+     }
     }
 }
 apk gen dir=${tmpdir}/apk_temp/gen
@@ -81,7 +87,7 @@ target "link_res"{
              assign(manifest file,AndroidManifest.xml)
           }
        }
-       display (Manifest ${manifest file})
+      # display (Manifest ${manifest file})
          exec "aapt2"(
              link,
              apk gen file,

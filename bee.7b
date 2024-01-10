@@ -1,10 +1,11 @@
 # the build script is for building Atjeews
+# it requires RustBee v 1.04.05 or better, check https://sourceforge.net/projects/seven-bee/files/Release%201.3.1/ for download and 
+# https://gitlab.com/tools6772135/rusthub for sources
 
 android_sdk ="/home/dmitriy/Android/Sdk"
 jdk_root =""
 tjws_src ="/home/dmitriy/projects/TJWS2/1.x"
-jasper ="/home/dmitriy/projects/jasper-8.5.78"  # for old: jasper-7.0.109 , for new: jasper-8.5.78
-websoketx ="false"
+jasper ="/home/dmitriy/projects/jasper-8.5.78"  # for old: jasper-7.0.109 , for new: jasper-8.5.78 (jasper-9.0.84 not working yet)
 fast_scanner ="/home/dmitriy/projects/fast-classpath-scanner/lib"
 keystore ="/home/dmitriy/Documents/android-publish.keystore"
 sdklib_custom ="/home/dmitriy/projects/sdklib/build"
@@ -13,15 +14,17 @@ min_sdk= "6"
 version_name ="1.50"
  version_code ="26"
 build_tool ="30.0.3"
- build_directory= "build"
 apk file=atjeews
 playstore list=false
-
+build_directory=build
 aidl=${android_sdk}/build-tools/${build_tool}/aidl
 aapt2=${android_sdk}/build-tools/${build_tool}/aapt2
 d8=${android_sdk}/build-tools/${build_tool}/d8
 tmpdir=/tmp
 apk tmp dir=${tmpdir}/apk_temp
+
+websocket jar=${build_directory}/.temp_repo/javax.websocket-api-1.1.jar
+servlet jar=${build_directory}/.temp_repo/javax.servlet-api-4.0.1.jar
 
 target remove_old {
      dependency {true}
@@ -45,10 +48,72 @@ target remove_old {
 apk gen dir=${tmpdir}/apk_temp/gen
 target "create dirs" {
         dependency {target(remove_old)}
+        dependency {target (dep_dir )}
        {
            exec mkdir(-p, ${apk gen dir})
        }
 }
+
+# getting dependencies from Maven
+target dep_dir {
+  dependency {
+     eq {
+        timestamp(${build_directory}${~separator~}.temp_repo)
+     }
+   }
+   display(Dir ${build_directory}${~separator~}.temp_repo -p)
+   exec mkdir (
+        -p,
+        ${build_directory}${~separator~}.temp_repo
+   )
+}
+
+target get_deps {
+  dependency {
+    or{
+     eq {
+        timestamp(websocket jar)
+     }
+    eq {
+        timestamp(servlet jar)
+     }
+    }
+   }
+   {
+      if {
+       eq {
+          timestamp(websocket jar)
+       }
+       then {
+          timestamp(websocket jar)
+         display(Loading WS : ${websocket jar} is ${~~})
+         websocket_api="javax.websocket:javax.websocket-api:1.1":rep-maven
+         as_url(websocket_api)
+         exec wget (
+           ~~, 
+           -O,
+           websocket jar
+         )
+      }
+   }
+
+    if {
+       eq {
+          timestamp(servlet jar)
+       }
+       then {
+         servlet_api="javax.servlet:javax.servlet-api:4.0.1":rep-maven
+         as_url(servlet_api)
+         exec wget (
+           ~~, 
+           -O,
+           servlet jar
+         )
+      }
+   }
+  }
+}
+
 
 target "idl gen" {
    dependency {target(create dirs)}
@@ -111,13 +176,14 @@ target "link_res"{
       }
 }
 
-CUSTOM CP=[${tjws_src}/lib/webserver.jar,${tjws_src}/lib/war.jar,${tjws_src}/lib/wskt.jar,${jasper}/build/jasper.jar,${fast_scanner}/class-scanner.jar]
+CUSTOM CP=[${tjws_src}/lib/webserver.jar,${tjws_src}/lib/war.jar,${tjws_src}/lib/wskt.jar,${jasper}/build/jasper.jar,${fast_scanner}/class-scanner.jar,${websocket jar},${servlet jar}]
 
 comp target=1.8
 
 target compile{
      dependency{ target(check build)}
      dependency{ target(link_res)}
+     dependency {target (get_deps)}
    {
     
     newerthan(src/rogatkin/mobile/web/.java)

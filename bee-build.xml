@@ -4,11 +4,12 @@
       <!ENTITY android_sdk "/home/dmitriy/Android/Sdk">
       <!ENTITY jdk_root "">
       <!ENTITY tjws_src "/home/dmitriy/projects/TJWS2/1.x">
-      <!ENTITY jasper "/home/dmitriy/projects/jasper-8.5.78">
+      <!ENTITY jasper "/home/dmitriy/projects/jasper-9.0.84">
       <!ENTITY websoketx "no">
       <!ENTITY fast_scanner "/home/dmitriy/projects/fast-classpath-scanner/lib">
       <!ENTITY keystore "/home/dmitriy/Documents/android-publish.keystore">
       <!ENTITY sdklib_custom "/home/dmitriy/projects/sdklib/build">
+      
       <!ENTITY target "34">
       <!ENTITY min_sdk "6">
       <!ENTITY version_name "1.50">
@@ -16,7 +17,7 @@
       <!ENTITY build_tool "30.0.3">
       <!ENTITY build_directory "build">
 ]>
-<!-- Build Atjeews Copyright 2023 (c) Dmitriy Rogatkin 
+<!-- Build Atjeews Copyright 2024 (c) Dmitriy Rogatkin 
      ref: https://github.com/2BAB/BuildingAndroidAppManually/blob/master/build.sh -->
 <bee name="apk-packaging" type="script">
      <expression name="apk tmp dir" >
@@ -277,6 +278,10 @@
 	        <value variable="CUSTOM CP"/>
 	     </else>
 	  </if>
+	  <operator name="append">
+		      <value>${CUSTOM CP}${PATH SEPARATOR}</value>
+		      <value type="repo_artifact">maven:javax.servlet:javax.servlet-api:4.0.11</value>
+      </operator>
   </expression>
   <expression variable="class path">
      <operator name="append">

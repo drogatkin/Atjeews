@@ -3,14 +3,14 @@
     "https://raw.githubusercontent.com/drogatkin/7Bee/master/bee.dtd" [
       <!ENTITY android_sdk "/home/dmitriy/Android/Sdk">
       <!ENTITY jasper_lib "/home/dmitriy/projects/jasper-8.5.78/build/jasper.jar">
-      <!ENTITY websoketx "no">
+      <!ENTITY websoketx "yes">
       <!ENTITY tjws_wskt_lib "/home/dmitriy/projects/TJWS2/1.x/lib/wskt.jar">
       <!ENTITY fast_scan_lib "/home/dmitriy/projects/fast-classpath-scanner/lib/class-scanner.jar">
       <!ENTITY target "34">
       <!ENTITY build_ver "30.0.3">
 ]>
-<!-- Prepare a war file for Android deployment, Copyright 2023 (c) Dmitriy Rogatkin 
-        set jasper-7.0.109 , for new: jasper-8.5.78
+<!-- Prepare a war file for Android deployment, Copyright 2024 (c) Dmitriy Rogatkin 
+        set jasper-7.0.109 , for new: jasper-8.5.78 or  jasper-9.0.84 with websoketx set to yes
 -->
 <bee name="dexer" type="script">
     <variable name="d8 path">&android_sdk;/build-tools/&build_ver;/lib/d8.jar</variable>
@@ -46,6 +46,29 @@
             <value name="path.separator" type="property"/>
             <value>&android_sdk;/platforms/android-&target;/android.jar</value>
         </operator>
+    </expression>
+    <expression name="jasper path">
+        <if>
+	     <expression>
+		 <operator name="eq">
+		    <value>&websoketx;</value>
+		    <value>yes</value>
+		</operator>
+	     </expression>
+	     <then>
+		   <operator name="append">
+		      <value>${jasper path}</value>
+		      <value name="path.separator" type="property"/>
+		      <value type="repo_artifact">maven:javax.websocket:javax.websocket-api:1.1</value>
+		      <value name="path.separator" type="property"/>
+		      <value type="repo_artifact">maven:javax.servlet:javax.servlet-api:4.0.1</value>
+		   </operator>
+	     </then>
+	     <else>
+      		  <value variable="scanner path"/>
+    	     </else>
+ 	    </if>
+     
     </expression>
     <variable name="source war"/>
     <variable name="dest war"/>
@@ -320,26 +343,29 @@
                   <value variable="&jasper_lib;"></value>
                </operator>
             </expression>
+            
             <expression name="scanner path">
-               <if>
-		     <expression>
-			 <operator name="eq">
-			    <value>&websoketx;</value>
-			    <value>yes</value>
-			</operator>
-		     </expression>
-		     <then>
-			   <operator name="append">
-			      <value variable="scanner path"/>
-			      <value>${scanner path}</value>
-			      <value name="path.separator" type="property"/>
-			      <value type="repo_artifact">maven:javax.websocket:javax.websocket-api:1.1</value>
-			   </operator>
-		     </then>
-		     <else>
-	      		  <value variable="scanner path"/>
-	    	     </else>
-	 	 </if>
+                <if>
+    		     <expression>
+    			 <operator name="eq">
+    			    <value>&websoketx;</value>
+    			    <value>yes</value>
+    			</operator>
+    		     </expression>
+    		     <then>
+    			   <operator name="append">
+    			      <value>${scanner path}</value>
+    			      <value name="path.separator" type="property"/>
+    			      <value type="repo_artifact">maven:javax.websocket:javax.websocket-api:1.1</value>
+    			      <value name="path.separator" type="property"/>
+    			      <value type="repo_artifact">maven:javax.servlet:javax.servlet-api:4.0.1</value>
+    			   </operator>
+    		     </then>
+    		     <else>
+    	      		  <value variable="scanner path"/>
+    	    	     </else>
+    	 	    </if>
+	 	    
             </expression>
             <echo>Processing server endpoints (cp: ${scanner path})</echo>
             <task name="scan" code="rogatkin.wskt.EndPointScanner" path="scanner path">

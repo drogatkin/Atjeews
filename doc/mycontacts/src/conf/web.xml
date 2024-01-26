@@ -1,0 +1,5 @@
+<web-app version="3.0" metadata-complete="true">
+	<welcome-file-list>
+		<welcome-file>mycontacts.jsp</welcome-file>
+	</welcome-file-list>
+</web-app>

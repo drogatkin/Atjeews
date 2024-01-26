@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+ <!DOCTYPE bee PUBLIC "-//Dmitriy Rogatkin//DTD Bee Project Builder 1.0//EN"
+    "https://raw.githubusercontent.com/drogatkin/7Bee/master/bee.dtd" [
+  ]>
+
+<bee name="mycontacts" type="project">
+  <target name="check build" dir=".">
+     <dependency>
+        <expression>
+          <operator name="eq">
+            <function name ="timestamp">
+               <parameter value="build" type="path"/>
+            </function>
+            <value></value>
+          </operator>
+        </expression>
+     </dependency>
+     <task exec="mkdir">
+       <parameter value="build" type="path"/>
+     </task>
+  </target>
+  
+  <target name="war" dir=".">
+    <dependency target="check build"/>
+    <dependency>
+       <expression>
+          <operator name="not">
+             <function name ="timestamp">
+                <parameter value="build/mycontacts.war" type="path"/>
+             </function>
+          </operator>
+       </expression>
+    </dependency>
+    <dependency>
+       <expression>
+          <function name="anynewer">
+             <parameter value="src/jsp/*.jsp" type="path"/>
+             <parameter value="build/mycontacts.war" type="path"/>
+          </function>
+       </expression>
+    </dependency>
+    <block>
+      <echo value="...->build/mycontacts.war"/>
+      <function name="warit">
+         <parameter value="build/mycontacts.war" type="path"/>                                    
+         <parameter>src/conf/web.xml</parameter>
+         <parameter>A</parameter>
+         <parameter>src/jsp/mycontacts.jsp</parameter>
+      </function>
+    </block>
+  </target>
+</bee>

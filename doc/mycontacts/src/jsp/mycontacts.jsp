@@ -6,6 +6,11 @@ android.database.Cursor,android.provider.ContactsContract, android.content.Conte
 <head>
    <meta name="viewport" content="width=device-width, user-scalable=no" />
    <title>My Contacts First Atjeews app demo</title>
+   <style>
+      tr:nth-child(even) {
+        background-color: #f2f2f2;
+      }
+</style>
 </head>
 <body>
 <h1>My Android contacts list</h1>
@@ -15,6 +20,7 @@ android.database.Cursor,android.provider.ContactsContract, android.content.Conte
         Context context = (Context)application.getAttribute("##RuntimeEnv");
          ContentResolver cr = context.getContentResolver();
 		Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
+		String colors[] = {"blue","red", "purple", "green"};
 		if (cur.getCount() > 0) {
 			while (cur.moveToNext()) {
 					String id = (cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID)));
@@ -26,12 +32,13 @@ android.database.Cursor,android.provider.ContactsContract, android.content.Conte
 						Cursor pCur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
 								ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[] { id }, null);
 						while (pCur.moveToNext()) {
-						    out.print("<span style=\"color:green\">");
-							out.print(pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE)));
-							out.print("</span>&nbsp;");
+					    	int colorIdx = limit(pCur.getInt(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE)));
+						    out.print("<span style=\"color:");
+						    out.print(colors[colorIdx]);
+						    out.print("\">");
 							out.print( pCur.getString(pCur
 									.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));
-                             out.print("<br/>");
+                             out.print("</span><br/>");
 						}
 						pCur.close();
 					}
@@ -46,10 +53,15 @@ android.database.Cursor,android.provider.ContactsContract, android.content.Conte
 								.getColumnIndex(ContactsContract.CommonDataKinds.Email.DATA));
 						String emailType = emailCur.getString(emailCur
 								.getColumnIndex(ContactsContract.CommonDataKinds.Email.TYPE));
+						int emailTypeInt = emailCur.getInt(emailCur
+								.getColumnIndex(ContactsContract.CommonDataKinds.Email.TYPE));
+						String customLabel = emailCur.getString(emailCur.getColumnIndex(ContactsContract.CommonDataKinds.Email.LABEL));
+                        CharSequence emailType1 = ContactsContract.CommonDataKinds.Email.getTypeLabel(context.getResources(), emailTypeInt, customLabel);
+                        out.print("<span style=\"color:blue\">");
+                        out.print(emailType1);
+                        out.print(":</span><br/>");
 						out.print(email);
-						out.print("&nbsp;<span style=\"color:blue\">");
-						out.print(emailType);
-						out.print("</span><br/>");
+						out.print("<br/>");
 					}
 					emailCur.close();
                    out.print("</td></tr>");
@@ -59,6 +71,18 @@ android.database.Cursor,android.provider.ContactsContract, android.content.Conte
 		}
 		cur.close(); // finally
 	%>
+	<%!
+
+public int limit(int i){
+   if (i < 0 || i > 3)
+      return 0;
+
+   return i;
+}
+
+%>
+
+
   </table>
 </body>
 </html>

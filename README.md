@@ -24,7 +24,7 @@ is a risk that websocket won't work correctly due a bug in Gradle.
 When you look for a web server for mobile devices as **Atjeews**, you can ask yourself - what is a usage for them? Surprisingly, an area for such server applications is a very wide.
 First, a developing web applications using web technologies is simpler than using a native applications creation, or using cross platform tools like Flutter, React Native and other.
 It's also simple to share such applications for multiple devices, as other phones, tablets, or desktop computers. Directory [doc/mycontacts](https://github.com/drogatkin/Atjeews/tree/master/doc/mycontacts)
-contains a simple starting application, you can develop in a matter of 5 minutes, and then deploy it and run on your phone and see result:
+contains a simple starting application, you can develop in a matter of 5 minutes, and then deploy it and run on your phone and see the result:
 
 
 ![mycontacts screen shot](https://github.com/drogatkin/Atjeews/blob/master/doc/mycontacts.png?raw=true)

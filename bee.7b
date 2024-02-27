@@ -13,7 +13,7 @@ target ="34"
 min_sdk= "6"
 version_name ="1.50"
  version_code ="26"
-build_tool ="30.0.3"
+build_tool ="33.0.1"
 apk file=atjeews
 playstore list=false
 build_directory=build
@@ -22,6 +22,9 @@ aapt2=${android_sdk}/build-tools/${build_tool}/aapt2
 d8=${android_sdk}/build-tools/${build_tool}/d8
 tmpdir=/tmp
 apk tmp dir=${tmpdir}/apk_temp
+# below lines have to be colmmented out for a default JDK location
+javac=/home/dmitriy/jdk1.8.0_401/bin/javac
+jar=/home/dmitriy/jdk1.8.0_401/bin/jar
 
 websocket jar=${build_directory}/.temp_repo/javax.websocket-api-1.1.jar
 servlet jar=${build_directory}/.temp_repo/javax.servlet-api-4.0.1.jar

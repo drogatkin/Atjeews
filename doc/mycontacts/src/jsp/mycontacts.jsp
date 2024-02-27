@@ -59,9 +59,11 @@ android.database.Cursor,android.provider.ContactsContract, android.content.Conte
                         CharSequence emailType1 = ContactsContract.CommonDataKinds.Email.getTypeLabel(context.getResources(), emailTypeInt, customLabel);
                         out.print("<span style=\"color:blue\">");
                         out.print(emailType1);
-                        out.print(":</span><br/>");
+                        out.print(":</span><br/>< a href=\"mailto:");
+                        out.print(email);
+                        out.print("\">");
 						out.print(email);
-						out.print("<br/>");
+						out.print("< /a><br/>");
 					}
 					emailCur.close();
                    out.print("</td></tr>");
